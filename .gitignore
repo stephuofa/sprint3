@@ -1,1 +1,4 @@
 build/
+output/
+core/run_num.txt
+.vscode

@@ -1,18 +1,40 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.21)
 
-project(Sprint3 CXX)
-set (CMAKE_CXX_STANDARD 11)
+project(Sprint3 C CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD   17)
+
+set(CMAKE_BUILD_TYPE Debug)
 
 # Output dir
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 # Compiler flags
-add_compile_options(-Wall)
+if(MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Wall -Wextra -pedantic)
+endif()
+
+# build katherine
+add_subdirectory(katherine)
 
 # Sources as libraries
-add_library(acq_lib ${PROJECT_SOURCE_DIR}/src/AcqController.cpp)
-target_include_directories(acq_lib PUBLIC ./inc)
+add_library(acq_lib ${PROJECT_SOURCE_DIR}/custom/src/AcqController.cpp)
+target_include_directories(acq_lib PUBLIC ./custom/inc)
+target_link_libraries(acq_lib PUBLIC katherinexx)
+
+add_library(dat_lib ${PROJECT_SOURCE_DIR}/custom/src/DataProcessor.cpp)
+target_include_directories(dat_lib PUBLIC ./custom/inc)
+
+add_library(str_lib ${PROJECT_SOURCE_DIR}/custom/src/StorageManager.cpp)
+target_include_directories(str_lib PUBLIC ./custom/inc)
+
+add_library(log_lib ${PROJECT_SOURCE_DIR}/custom/src/Logger.cpp)
+target_include_directories(log_lib PUBLIC ./custom/inc)
 
 # Make main program executable
-add_executable(sprint main.cpp )
-target_link_libraries(sprint PRIVATE acq_lib)
+add_executable(sprint core/main.cpp)
+target_link_libraries(sprint PRIVATE acq_lib dat_lib str_lib log_lib)
