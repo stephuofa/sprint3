@@ -1,0 +1,18 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(Sprint3 CXX)
+set (CMAKE_CXX_STANDARD 11)
+
+# Output dir
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Compiler flags
+add_compile_options(-Wall)
+
+# Sources as libraries
+add_library(acq_lib ${PROJECT_SOURCE_DIR}/src/AcqController.cpp)
+target_include_directories(acq_lib PUBLIC ./inc)
+
+# Make main program executable
+add_executable(sprint main.cpp )
+target_link_libraries(sprint PRIVATE acq_lib)
