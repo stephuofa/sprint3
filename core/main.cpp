@@ -96,21 +96,28 @@ int main (){
     std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
 
     AcqController acqCtrl(rawHitsQ,rawHitsToWriteQ);
-    acqCtrl.testConnection();
-
     // DataProcessor dataProc(rawHitsQ,speciesHitsQ);
     // StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteQ);
 
     // std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
 
-
+    // Configure Acquisition Settings
+    if (!acqCtrl.connectDevice()){
+        printf("failed to connect to hardpix\n");
+        return EXIT_FAILURE;
+    }
+    acqCtrl.loadConfig();
+    
     // // Acquire
     // // TODO change this condition
-    // for(int i = 0; i < 10; i++){
-    //     struct RawHit rh((uint8_t)i,(uint8_t)i);
-    //     acqCtrl.mockNewData(rh);
-    // }
+    for(int i = 0; i < 10; i++){
+        printf("running acq #%i...\n",i);
+        acqCtrl.runAcq();
+    }
 
+    // TODO - fix shutdown
+
+    
     // // Tidy Up
     // // TODO - endd connnection with HP
     // dataProc.finish();
