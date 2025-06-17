@@ -136,7 +136,7 @@ katherine_udp_fini(katherine_udp_t *u)
     }
 
     int res2 = WSACleanup();
-     if (res!=0){
+    if (res2!=0){
         printf("Error during WSA Cleanup: %#x\n",WSAGetLastError());
     }
 }

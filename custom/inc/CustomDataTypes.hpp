@@ -13,6 +13,8 @@ enum class Species {
     OTHER,
 };
 
+
+
 struct RawHit {
     uint8_t x_;
     uint8_t y_;
