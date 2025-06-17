@@ -96,23 +96,25 @@ int main (){
     std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
 
     AcqController acqCtrl(rawHitsQ,rawHitsToWriteQ);
-    DataProcessor dataProc(rawHitsQ,speciesHitsQ);
-    StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteQ);
+    acqCtrl.testConnection();
 
-    std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
+    // DataProcessor dataProc(rawHitsQ,speciesHitsQ);
+    // StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteQ);
+
+    // std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
 
 
-    // Acquire
-    // TODO change this condition
-    for(int i = 0; i < 10; i++){
-        struct RawHit rh((uint8_t)i,(uint8_t)i);
-        acqCtrl.mockNewData(rh);
-    }
+    // // Acquire
+    // // TODO change this condition
+    // for(int i = 0; i < 10; i++){
+    //     struct RawHit rh((uint8_t)i,(uint8_t)i);
+    //     acqCtrl.mockNewData(rh);
+    // }
 
-    // Tidy Up
-    // TODO - endd connnection with HP
-    dataProc.finish();
-    storageMngr.finish();
+    // // Tidy Up
+    // // TODO - endd connnection with HP
+    // dataProc.finish();
+    // storageMngr.finish();
     
     return 0;
 }

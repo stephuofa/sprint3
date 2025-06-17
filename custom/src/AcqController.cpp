@@ -1,6 +1,7 @@
 #include "AcqController.hpp"
 
 #include <stdio.h>
+#include <iostream>
 
 #define RAW_HIT_BLOCK_SIZE 2
 
@@ -19,4 +20,17 @@ void AcqController::mockNewData(RawHit rh){
         rawHitsToWriteQ->cv_.notify_one();
     }
     
+}
+
+void AcqController::testConnection(){
+    try
+    {
+        katherine::device device{hpAddr};
+        std::string chip_id = device.chip_id();
+        std::cout << "chipID is: " << chip_id <<std::endl;
+    } catch (const katherine::error& e)
+    {
+        printf("Failed to get ID: %s\n", e.what());
+    }
+
 }

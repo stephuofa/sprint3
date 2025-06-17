@@ -11,6 +11,7 @@
 
 class AcqController final{
     private:
+        const std::string hpAddr = "192.168.1.157";
         std::string runNum;
         std::shared_ptr<SafeQueue<RawHit>> rawHitsQ;
         std::shared_ptr<SafeQueue<RawHit>> rawHitsToWriteQ;
@@ -20,5 +21,6 @@ class AcqController final{
 
     public:
         AcqController(std::shared_ptr<SafeQueue<RawHit>> rhq,std::shared_ptr<SafeQueue<RawHit>> rh2w);
+        void testConnection();
         void mockNewData(RawHit rh);
 };
