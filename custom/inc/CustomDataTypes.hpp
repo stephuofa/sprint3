@@ -20,11 +20,11 @@ struct RawHit {
     uint8_t y_;
 
     // TODO - should we convert acq start & num ticks to time on construction?
-    // bool acqStart_ = false;// TODO - choose appropriate type
-    // bool toaTicks_ = false; // TODO - choose appropriate type
+    std::chrono::time_point<std::chrono::system_clock> acqStart_;
+    uint64_t toaTicks_;
     // bool energy_ = false;   // TODO - choose appropriate type
 
-   inline RawHit(uint8_t x, uint8_t y): x_(x), y_(y){};
+   inline RawHit(std::chrono::time_point<std::chrono::system_clock> tp,uint8_t x, uint8_t y,uint64_t ticks): x_(x), y_(y),acqStart_(tp),toaTicks_(ticks){};
 };
 
 struct SpeciesHit {

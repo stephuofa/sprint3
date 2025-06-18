@@ -22,33 +22,65 @@ bool AcqController::testConnection(){
     try
     {
         id = device->chip_id();
-    } catch(const std::exception)
+    } catch(const std::exception& e)
     {
+        printf("error while fetching chip id: ");
+        std::cout << e.what() << std::endl;
         return false;
     }
+    std::cout << "expected ID: " << hpChipId << " recieved ID: " << id << std::endl;
     return id == hpChipId;
 }
 
 bool AcqController::connectDevice(){
-    uint8_t attempts = 0;
-    while(true){
+
+    bool devConnected = false;
+    for(size_t i = 0; i < 5 ; i++){
+        printf("creating sockets attempt %i\n",i);
+
         try
         {
             device.emplace(hpAddr);
-            return testConnection();
-        } catch (const std::exception)
+            printf("created sockets\n");
+            devConnected = true;
+            break;
+        } 
+        catch (const std::exception& e)
         {
-            printf("failed to connect to timepix");
-            attempts++;
-            
+            printf("failed to create sockets\n");
+            std::cerr << e.what() << '\n';
+            std::this_thread::sleep_for(std::chrono::seconds(2));
         }
-        if(attempts > 10){
-            printf(" - aborting \n");
-            return false;
-        }
-        printf(" - retrying\n");
-        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+
+    if(!devConnected)
+    {
+        return false;
+    }
+
+    devConnected = false;
+    for(size_t i = 0; i < 5; i++){
+        printf("test connection attempt %i...",i);
+
+        try
+        {
+            if(testConnection())
+            {
+                printf("Connection Successful\n");
+                devConnected = true;
+                break;
+            }
+            printf("connection test failed\n");
+        }
+        catch(const std::exception& e)
+        {
+            printf("error while validating connection\n");
+            std::cerr << e.what() << '\n';
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+
+    return devConnected;
 }
 
 void AcqController::loadConfig(){
@@ -120,17 +152,26 @@ AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_
 }
 
 void
-AcqController::pixels_received(const mode::pixel_type *px, size_t count)
+AcqController::pixels_received(const std::chrono::time_point<std::chrono::system_clock>& tp,const mode::pixel_type *px, size_t count)
 {
     nHits += count;
 
-    for (size_t i = 0; i < count; ++i) {
-        // TODO copy into rawHitsBuff
-        std::cerr << (unsigned) px[i].coord.x << '\t'
-                  << (unsigned) px[i].coord.y << '\t'
-                  << (unsigned) px[i].toa << '\t'
-                  << (unsigned) px[i].ftoa << '\t'
-                  << (unsigned) px[i].tot << std::endl;
+    {
+        std::lock_guard lk(rawHitsQ->mtx_);
+        for (size_t i = 0; i < count; ++i){
+            rawHitsQ->q_.push(RawHit(tp,px[i].coord.x,px[i].coord.y,px[i].toa));
+        }
+    }
+    rawHitsQ->cv_.notify_one();
+
+    {
+        std::lock_guard lk(rawHitsToWriteQ->mtx_);
+        for (size_t i = 0; i < count; ++i){
+            rawHitsToWriteQ->q_.push(RawHit(tp,px[i].coord.x,px[i].coord.y,px[i].toa));
+        }
+    }
+    if(rawHitsToWriteQ->q_.size() > 1){
+        rawHitsToWriteQ->cv_.notify_one();
     }
 }
 
@@ -146,7 +187,7 @@ bool AcqController::runAcq(){
 
     acq.set_frame_started_handler(std::bind_front(&AcqController::frame_started,this));
     acq.set_frame_ended_handler(std::bind_front(&AcqController::frame_ended,this));
-    acq.set_pixels_received_handler(std::bind_front(&AcqController::pixels_received,this));
+    acq.set_pixels_received_handler(std::bind_front(&AcqController::pixels_received, this, std::chrono::system_clock::now()));
 
     acq.begin(config, katherine::readout_type::data_driven);
     std::cerr << "Acquisition started." << std::endl;

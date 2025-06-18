@@ -22,13 +22,13 @@ void DataProcessor::processRawHits(std::stop_token stopToken){
             }
             
             while(!rawHitsQ->q_.empty()){
-                sum += rawHitsQ->q_.front().x_;
+                // TODO add actual processing and push to species hit and notify
                 print_raw_hit(rawHitsQ->q_.front());
                 rawHitsQ->q_.pop();
             }
         }
-        std::unique_lock lk(speciesHitsQ->mtx_);
-        speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0));
+        // std::unique_lock lk(speciesHitsQ->mtx_);
+        // speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0));
     }
     printf("Data Processor thread terminated\n");
 }

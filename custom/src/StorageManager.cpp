@@ -88,8 +88,8 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
         }
 
         while(!rawHitsToWriteQ->q_.empty()){
-            int x = rawHitsToWriteQ->q_.front().x_;
-            outFile << "hit: " << std::to_string(x) << std::endl;
+            const auto hit = rawHitsToWriteQ->q_.front();
+            outFile << "hit: x-" << (unsigned) hit.x_ << " y-" << (unsigned) hit.y_ << " acqStart-" << std::chrono::duration_cast<std::chrono::nanoseconds>(hit.acqStart_.time_since_epoch()).count() << " ticks-" << hit.toaTicks_ << std::endl;
             rawHitsToWriteQ->q_.pop();
             count++;
         }

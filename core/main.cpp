@@ -96,10 +96,10 @@ int main (){
     std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
 
     AcqController acqCtrl(rawHitsQ,rawHitsToWriteQ);
-    // DataProcessor dataProc(rawHitsQ,speciesHitsQ);
-    // StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteQ);
+    DataProcessor dataProc(rawHitsQ,speciesHitsQ);
+    StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteQ);
 
-    // std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
 
     // Configure Acquisition Settings
     if (!acqCtrl.connectDevice()){
@@ -110,18 +110,16 @@ int main (){
     
     // // Acquire
     // // TODO change this condition
-    for(int i = 0; i < 10; i++){
+    for(int i = 0; i < 3; i++){
         printf("running acq #%i...\n",i);
         acqCtrl.runAcq();
     }
 
-    // TODO - fix shutdown
 
-    
-    // // Tidy Up
-    // // TODO - endd connnection with HP
-    // dataProc.finish();
-    // storageMngr.finish();
+    // Tidy Up
+    // TODO - endd connnection with HP
+    dataProc.finish();
+    storageMngr.finish();
     
     return 0;
 }
