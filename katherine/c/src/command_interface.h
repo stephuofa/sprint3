@@ -112,6 +112,31 @@ katherine_cmd6_long(katherine_udp_t *udp, char val6, long value)
 }
 
 static inline int
+katherine_cmd6_uint32(katherine_udp_t *udp, char val6, uint32_t value)
+{
+    char cmd[8] = {0};
+    cmd[6] = val6;
+    katherine_cmd_uint32(cmd, value);
+
+    return katherine_cmd(udp, &cmd, sizeof(cmd));
+}
+
+static inline int
+katherine_cmd_uint32(char *cmd, uint32_t value){
+    int i = 0;
+    int mlsb, mmsb;
+    while (value > 0) {
+        mlsb = (0x0f) & (int) (value % 16);
+        value /= 16;
+
+        mmsb = (0x0f) & (int) (value % 16);
+        value /= 16;
+
+        cmd[i++] = (char) ((0xff & mlsb) | (0xff & mmsb) << 4);
+    }
+}
+
+static inline int
 katherine_cmd6_float(katherine_udp_t* udp, char val6, float value)
 {
     char cmd[8] = {0};
@@ -214,8 +239,8 @@ K_DEFINE_CMD_ARG0(cmd60,      hw_chip_id_read,                          CMD_TYPE
 K_DEFINE_CMD_ARG0(cmd60,      hw_output_block_config_update,            CMD_TYPE_HW_COMMAND_START, CMD_START_OUTPUT_BLOCK_CONFIG_UPDATE)
 K_DEFINE_CMD_ARG0(cmd60,      hw_digital_test,                          CMD_TYPE_HW_COMMAND_START, CMD_START_DIGITAL_TEST)
 
-K_DEFINE_CMD_ARG1(cmd6_long,  set_acqtime_lsb,                          long, CMD_TYPE_ACQUISITION_TIME_SETTINGS_LSB)
-K_DEFINE_CMD_ARG1(cmd6_long,  set_acqtime_msb,                          long, CMD_TYPE_ACQUISITION_TIME_SETTING_MSB)
+K_DEFINE_CMD_ARG1(cmd6_uint32,  set_acqtime_lsb,                          uint32_t, CMD_TYPE_ACQUISITION_TIME_SETTINGS_LSB)
+K_DEFINE_CMD_ARG1(cmd6_uint32,  set_acqtime_msb,                          uint32_t, CMD_TYPE_ACQUISITION_TIME_SETTING_MSB)
 K_DEFINE_CMD_ARG1(cmd6_long,  set_number_of_frames,                     long, CMD_TYPE_NUMBER_OF_FRAMES)
 K_DEFINE_CMD_ARG1(cmd6_long,  set_seq_readout_start,                    long, CMD_TYPE_SEQ_READOUT_START)
 K_DEFINE_CMD_ARG1(cmd6_long,  start_acquisition,                        char, CMD_TYPE_ACQUISITION_START)
