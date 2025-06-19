@@ -3,7 +3,7 @@
 #include <functional>
 #include <string>
 
-StorageManager::StorageManager(std::string rn,std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<SafeQueue<RawHit>> rh2w):runNum(rn),speciesHitsQ(shq),rawHitsToWriteQ(rh2w){
+StorageManager::StorageManager(std::string rn,std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w):runNum(rn),speciesHitsQ(shq),rawHitsToWriteBuff(rh2w){
     speciesThread = std::jthread([&](std::stop_token stoken){this->handleSpeciesHits(stoken);});
     rawThread = std::jthread([&](std::stop_token stoken){this->handleRawHits(stoken);});
 }
@@ -42,7 +42,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
         }
         
         while(!speciesHitsQ->q_.empty()){
-            outFile << "species hit: " << std::to_string(static_cast<int>(speciesHitsQ->q_.front().species_)) << std::endl;
+            outFile << "species hit: " << speciesHitsQ->q_.front().ticks_ << std::endl;
             speciesHitsQ->q_.pop();
         }
         
@@ -64,7 +64,7 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
     uint16_t count = MAX_RAW + 1;
     uint64_t fileNo = 0;
     std::ofstream outFile;
-    while(!stopToken.stop_requested() || !rawHitsToWriteQ->q_.empty()){
+    while(!stopToken.stop_requested() || rawHitsToWriteBuff->numElements_){
         // change to a new file, if its got too big
         if (count > MAX_RAW){
             if(outFile.is_open()){
@@ -81,18 +81,20 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             return;
         }
         
-        std::unique_lock lk(rawHitsToWriteQ->mtx_);
-        if(!stopToken.stop_requested()){
-            // we may not be signaled about data if a stop has been requested
-            rawHitsToWriteQ->cv_.wait(lk);
-        }
+        {
+            std::unique_lock lk(rawHitsToWriteBuff->mtx_);
+            if(!stopToken.stop_requested()){
+                // we may not be signaled about data if a stop has been requested
+                rawHitsToWriteBuff->cv_.wait(lk);
+            }
 
-        while(!rawHitsToWriteQ->q_.empty()){
-            const auto hit = rawHitsToWriteQ->q_.front();
-            outFile << "hit: x-" << (unsigned) hit.x_ << " y-" << (unsigned) hit.y_ << " acqStart-" << std::chrono::duration_cast<std::chrono::nanoseconds>(hit.acqStart_.time_since_epoch()).count() << " ticks-" << hit.toaTicks_ << std::endl;
-            rawHitsToWriteQ->q_.pop();
-            count++;
+            for(size_t i = 0; i < rawHitsToWriteBuff->numElements_; i++){
+                outFile << "x: " << (unsigned) rawHitsToWriteBuff->buf_[i].coord.x << "   y:"  << (unsigned) rawHitsToWriteBuff->buf_[i].coord.y << "   toa: " << rawHitsToWriteBuff->buf_[i].toa << std::endl;
+            }
+            rawHitsToWriteBuff->numElements_ = 0;
         }
+        
+        
     }
     outFile.flush();
     outFile.close();
@@ -101,5 +103,5 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
 
 void StorageManager::finish(){
     safe_finish(speciesThread,speciesHitsQ);
-    safe_finish(rawThread,rawHitsToWriteQ);
+    safe_finish(rawThread,rawHitsToWriteBuff);
 }

@@ -91,13 +91,13 @@ int main (){
     // TODO
 
     // Initialize core classes
-    std::shared_ptr<SafeQueue<RawHit>> rawHitsQ = std::make_shared<SafeQueue<RawHit>>();
-    std::shared_ptr<SafeQueue<RawHit>> rawHitsToWriteQ = std::make_shared<SafeQueue<RawHit>>();
+    std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
+    std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
     std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
 
-    AcqController acqCtrl(rawHitsQ,rawHitsToWriteQ);
-    DataProcessor dataProc(rawHitsQ,speciesHitsQ);
-    StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteQ);
+    AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
+    DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
+    StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
 
     std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
 
@@ -110,10 +110,8 @@ int main (){
     
     // // Acquire
     // // TODO change this condition
-    for(int i = 0; i < 3; i++){
-        printf("running acq #%i...\n",i);
-        acqCtrl.runAcq();
-    }
+    acqCtrl.runAcq();
+
 
 
     // Tidy Up

@@ -28,12 +28,18 @@ target_link_libraries(acq_lib PUBLIC katherinexx)
 
 add_library(dat_lib STATIC ${PROJECT_SOURCE_DIR}/custom/src/DataProcessor.cpp)
 target_include_directories(dat_lib PUBLIC ./custom/inc)
+target_link_libraries(dat_lib PUBLIC katherinexx)
+
 
 add_library(str_lib STATIC ${PROJECT_SOURCE_DIR}/custom/src/StorageManager.cpp)
 target_include_directories(str_lib PUBLIC ./custom/inc)
+target_link_libraries(str_lib PUBLIC katherinexx)
+
 
 add_library(log_lib STATIC ${PROJECT_SOURCE_DIR}/custom/src/Logger.cpp)
 target_include_directories(log_lib PUBLIC ./custom/inc)
+target_link_libraries(str_lib PUBLIC katherinexx)
+
 
 # Make main program executable
 add_executable(sprint core/main.cpp)

@@ -16,7 +16,7 @@
 class StorageManager final {
 
     public:
-        StorageManager(std::string runNum,std::shared_ptr<SafeQueue<SpeciesHit>>,std::shared_ptr<SafeQueue<RawHit>>);
+        StorageManager(std::string runNum,std::shared_ptr<SafeQueue<SpeciesHit>>,std::shared_ptr<SafeBuff<mode::pixel_type>>);
         void handleSpeciesHits(std::stop_token stopToken);
         void handleRawHits(std::stop_token stopToken);
 
@@ -31,6 +31,6 @@ class StorageManager final {
         std::string speciesPath = "output/data/species/";
         std::jthread speciesThread;
         std::jthread rawThread;
-        std::shared_ptr<SafeQueue<RawHit>> rawHitsToWriteQ;
+        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff;
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ;
 };

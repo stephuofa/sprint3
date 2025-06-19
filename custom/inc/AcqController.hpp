@@ -6,10 +6,10 @@
 #pragma once
 
 #include <memory>
-#include <katherinexx/katherinexx.hpp>
+
 #include "CustomDataTypes.hpp"
 
-using mode = katherine::acq::f_toa_tot;
+
 
 class AcqController final{
     private:
@@ -18,8 +18,8 @@ class AcqController final{
         uint64_t nHits = 0;
         // TIME of acq begine
         std::string runNum;
-        std::shared_ptr<SafeQueue<RawHit>> rawHitsQ;
-        std::shared_ptr<SafeQueue<RawHit>> rawHitsToWriteQ;
+        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff;
+        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff;
 
         std::optional<katherine::device> device;
         katherine::config config;
@@ -30,7 +30,7 @@ class AcqController final{
 
 
     public:
-        AcqController(std::shared_ptr<SafeQueue<RawHit>> rhq,std::shared_ptr<SafeQueue<RawHit>> rh2w);
+        AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w);
         void loadConfig();
         bool testConnection();
         bool connectDevice();

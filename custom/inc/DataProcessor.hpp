@@ -8,6 +8,7 @@
 #include <thread>
 #include "CustomDataTypes.hpp"
 
+
 /**
  * @class DataProcessor
  * recieves raw hit data, converts it to processed hit data, sends to StorageManager
@@ -15,11 +16,11 @@
 class DataProcessor final{
     private:
         std::jthread dpThread;
-        std::shared_ptr<SafeQueue<RawHit>> rawHitsQ;
+        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff;
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ;
 
     public:
-        DataProcessor(std::shared_ptr<SafeQueue<RawHit>>,std::shared_ptr<SafeQueue<SpeciesHit>>);
+        DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>>,std::shared_ptr<SafeQueue<SpeciesHit>>);
         void processRawHits(std::stop_token stopToken);
         void finish();
 };

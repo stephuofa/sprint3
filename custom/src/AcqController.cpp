@@ -7,8 +7,8 @@
 
 
 
-AcqController::AcqController(std::shared_ptr<SafeQueue<RawHit>> rhq,std::shared_ptr<SafeQueue<RawHit>> rh2w):
- rawHitsQ(rhq), rawHitsToWriteQ(rh2w) {}
+AcqController::AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w):
+ rawHitsBuff(rhq), rawHitsToWriteBuff(rh2w) {}
 
 
 bool AcqController::testConnection(){
@@ -87,7 +87,7 @@ void AcqController::loadConfig(){
     using namespace std::literals::chrono_literals;
 
     config.set_bias_id(0);
-    config.set_acq_time(10s);
+    config.set_acq_time(25s);
     config.set_no_frames(1);
     config.set_bias(0); // V
 
@@ -123,7 +123,7 @@ void AcqController::loadConfig(){
     dacs.named.PLL_Vcntrl            = 128;
     config.set_dacs(std::move(dacs));
 
-    katherine::px_config px_config = katherine::load_bmc_file("core/chipconfig.bmc"); // TODO - add wrapper
+    katherine::px_config px_config = katherine::load_bmc_file("core/chipconfig.bmc"); // TODO - add error catch wrapperer
     config.set_pixel_config(std::move(px_config));
 }
 
@@ -151,27 +151,32 @@ AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_
                 << " - end time: " << info.end_time.d << std::endl;
 }
 
+#define rawCountNotifInc 10
 void
 AcqController::pixels_received(const std::chrono::time_point<std::chrono::system_clock>& tp,const mode::pixel_type *px, size_t count)
 {
     nHits += count;
 
-    {
-        std::lock_guard lk(rawHitsQ->mtx_);
-        for (size_t i = 0; i < count; ++i){
-            rawHitsQ->q_.push(RawHit(tp,px[i].coord.x,px[i].coord.y,px[i].toa));
-        }
+    for (int i = 0; i < count; i++){
+
     }
-    rawHitsQ->cv_.notify_one();
 
     {
-        std::lock_guard lk(rawHitsToWriteQ->mtx_);
-        for (size_t i = 0; i < count; ++i){
-            rawHitsToWriteQ->q_.push(RawHit(tp,px[i].coord.x,px[i].coord.y,px[i].toa));
-        }
+        std::lock_guard lk(rawHitsBuff->mtx_);
+        std::memcpy(rawHitsBuff->buf_+ rawHitsBuff->numElements_,px,count*sizeof(mode::pixel_type));
+        rawHitsBuff->numElements_ += count;
     }
-    if(rawHitsToWriteQ->q_.size() > 1){
-        rawHitsToWriteQ->cv_.notify_one();
+    rawHitsBuff->cv_.notify_one();
+
+    bool notifyRaw = false;
+    {
+        std::lock_guard lk(rawHitsToWriteBuff->mtx_);
+        std::memcpy(rawHitsToWriteBuff->buf_ + rawHitsToWriteBuff->numElements_,px,count*sizeof(mode::pixel_type));
+        rawHitsToWriteBuff->numElements_ += count;
+        notifyRaw = (rawHitsToWriteBuff->numElements_ > rawCountNotifInc);
+    }
+    if(notifyRaw){
+        rawHitsToWriteBuff->cv_.notify_one();
     }
 }
 
