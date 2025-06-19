@@ -107,25 +107,25 @@ typedef struct katherine_acquisition {
 
 } katherine_acquisition_t;
 
-KATHERINE_EXPORTED int
+int
 katherine_acquisition_init(katherine_acquisition_t *acq, katherine_device_t *device, void *ctx, size_t md_buffer_size, size_t pixel_buffer_size, int report_timeout, int fail_timeout);
 
-KATHERINE_EXPORTED void
+void
 katherine_acquisition_fini(katherine_acquisition_t *acq);
 
-KATHERINE_EXPORTED int
+int
 katherine_acquisition_begin(katherine_acquisition_t *acq, const katherine_config_t *config, char readout_mode, katherine_acquisition_mode_t acq_mode, bool fast_vco_enabled, bool decode_data);
 
-KATHERINE_EXPORTED int
+int
 katherine_acquisition_abort(katherine_acquisition_t *acq);
 
-KATHERINE_EXPORTED int
+int
 katherine_acquisition_stop(katherine_acquisition_t *acq);
 
-KATHERINE_EXPORTED int
+int
 katherine_acquisition_read(katherine_acquisition_t *acq);
 
-KATHERINE_EXPORTED const char *
+const char *
 katherine_str_acquisition_status(char status);
 
 #ifdef __cplusplus

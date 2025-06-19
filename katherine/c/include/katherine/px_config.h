@@ -44,16 +44,16 @@ typedef struct katherine_bpc {
     katherine_bpc_px_t px_config[65536];
 } katherine_bpc_t;
 
-KATHERINE_EXPORTED int
+  int
 katherine_px_config_load_bmc_file(katherine_px_config_t *px_config, const char *file_path);
 
-KATHERINE_EXPORTED int
+  int
 katherine_px_config_load_bmc_data(katherine_px_config_t *px_config, const katherine_bmc_t *bmc);
 
-KATHERINE_EXPORTED int
+  int
 katherine_px_config_load_bpc_file(katherine_px_config_t *px_config, const char *file_path);
 
-KATHERINE_EXPORTED int
+  int
 katherine_px_config_load_bpc_data(katherine_px_config_t *px_config, const katherine_bpc_t *bpc);
 
 #ifdef __cplusplus

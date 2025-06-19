@@ -16,7 +16,7 @@ set(KATHERINE_HEADERS
     "include/katherine/acquisition.h"
     "include/katherine/config.h"
     "include/katherine/device.h"
-    "include/katherine/global.h"
+    # "include/katherine/global.h"
     "include/katherine/katherine.h"
     "include/katherine/px_config.h"
     "include/katherine/px.h"
@@ -26,18 +26,18 @@ set(KATHERINE_HEADERS
     "include/katherine/udp_win.h"
 )
 
-add_library(katherine SHARED ${KATHERINE_SOURCES} ${KATHERINE_HEADERS})
+add_library(katherine STATIC ${KATHERINE_SOURCES})
 target_include_directories(katherine
     PUBLIC
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/katherine>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # On Windows, link to ws2_32
 if(WIN32 OR MINGW)
-  target_link_libraries(katherine ws2_32)
+  target_link_libraries(katherine PUBLIC ws2_32)
 endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/katherine.pc.in katherine.pc @ONLY)

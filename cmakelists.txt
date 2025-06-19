@@ -22,17 +22,17 @@ endif()
 add_subdirectory(katherine)
 
 # Sources as libraries
-add_library(acq_lib ${PROJECT_SOURCE_DIR}/custom/src/AcqController.cpp)
+add_library(acq_lib STATIC ${PROJECT_SOURCE_DIR}/custom/src/AcqController.cpp)
 target_include_directories(acq_lib PUBLIC ./custom/inc)
 target_link_libraries(acq_lib PUBLIC katherinexx)
 
-add_library(dat_lib ${PROJECT_SOURCE_DIR}/custom/src/DataProcessor.cpp)
+add_library(dat_lib STATIC ${PROJECT_SOURCE_DIR}/custom/src/DataProcessor.cpp)
 target_include_directories(dat_lib PUBLIC ./custom/inc)
 
-add_library(str_lib ${PROJECT_SOURCE_DIR}/custom/src/StorageManager.cpp)
+add_library(str_lib STATIC ${PROJECT_SOURCE_DIR}/custom/src/StorageManager.cpp)
 target_include_directories(str_lib PUBLIC ./custom/inc)
 
-add_library(log_lib ${PROJECT_SOURCE_DIR}/custom/src/Logger.cpp)
+add_library(log_lib STATIC ${PROJECT_SOURCE_DIR}/custom/src/Logger.cpp)
 target_include_directories(log_lib PUBLIC ./custom/inc)
 
 # Make main program executable

@@ -9,10 +9,9 @@ set(KATHERINEXX_HEADERS
 
 add_library(katherinexx INTERFACE)
 target_link_libraries(katherinexx INTERFACE katherine)
-target_include_directories(katherinexx
-    INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+target_include_directories(katherinexx INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/katherinexx>
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/katherinexx.pc.in katherinexx.pc @ONLY)

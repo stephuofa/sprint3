@@ -26,10 +26,10 @@ typedef struct katherine_device {
     katherine_udp_t data_socket;
 } katherine_device_t;
 
-KATHERINE_EXPORTED int
+int
 katherine_device_init(katherine_device_t *device, const char *addr);
 
-KATHERINE_EXPORTED void
+void
 katherine_device_fini(katherine_device_t *device);
 
 #ifdef __cplusplus
