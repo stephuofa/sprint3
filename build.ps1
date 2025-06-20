@@ -1,5 +1,7 @@
 param(
-    [switch]$clean
+    [switch]$clean,
+    [switch]$release,
+    [switch]$test
 )
 
 if($clean){
@@ -8,6 +10,17 @@ if($clean){
 }
 
 cd build
+
+if($release){
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+}else {
+    cmake -DCMAKE_BUILD_TYPE=Debug ..
+}
+
+if($test){
+    cmake -DMAKE_TESTS:BOOL=ON ..
+}
+
 cmake ..
 cd ..
 cmake --build build
