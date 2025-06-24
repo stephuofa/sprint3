@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <iostream>
 #include "AcqController.hpp"
 #include "Logger.hpp"
 #include "DataProcessor.hpp"
@@ -13,6 +14,7 @@
 #include <chrono>
 #include <stdio.h>
 #include <string>
+#include <regex>
 #include <filesystem>
 
 static std::string PATH_TO_RUN_NUM_FILE = "core/run_num.txt";
@@ -60,12 +62,39 @@ int getRunNum(){
     }
 }
 
-std::string updateRunNum(int runInt){
+std::string parseForRunNum()
+{
+    size_t maxNum = 0;
+    std::regex file_regex(R"(rawHits_RN-(\d+)_FN-\d+\.txt)");
+
+    for (const auto& entry : std::filesystem::directory_iterator("output/data/raw"))
+    {
+        if(entry.is_regular_file()){
+            std::string filename = entry.path().filename().string();
+            std::smatch matches;
+
+            if(std::regex_match(filename,matches,file_regex))
+            {
+                int curNum = std::stoi(matches[1].str());
+                if (curNum > maxNum){ maxNum = curNum; }
+            }
+        }
+    }
+
+    if(!maxNum)
+    {
+        return "1";
+    }
+
+    return std::to_string(maxNum + 1);
+}
+
+std::string updateRunNum(int runInt)
+{
     std::string runNum;
     if (runInt < 0){
-        // we failed to get a valid run_int -> use random
-        srand((unsigned int) time(NULL));
-        runNum = "RAND" + std::to_string(rand());
+        // we failed to get a valid run_int -> search through output and find the highest
+        runNum = parseForRunNum();
     } else{
         runNum = std::to_string(runInt+1);
     }
@@ -75,44 +104,56 @@ std::string updateRunNum(int runInt){
     return runNum;
 }
 
-int main (){
-    // make paths for output data
-    createReqPaths();
+int main (int argc, char* argv[]){
+    try
+    {
+        size_t acqTime = 10;
+        if (argc > 1){ acqTime = std::stoi(argv[1]); }
 
-    // Get run number and increment it
-    int runInt = getRunNum();
-    std::string runNum = updateRunNum(runInt);
+        // make paths for output data
+        createReqPaths();
 
-    // Start Logging
-    std::string logFileName = "output/logs/log_run" + runNum + ".txt";
-    Logger logger(logFileName);
+        // Get run number and increment it
+        int runInt = getRunNum();
+        std::string runNum = updateRunNum(runInt);
 
-    // Initialize core classes
-    std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
-    std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
-    std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
-    AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
+        // Start Logging
+        std::string logFileName = "output/logs/log_run" + runNum + ".txt";
+        Logger logger(logFileName);
 
-    // the order of declaration of these classes is important, we want dataProc destructed before storageMng
-    DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
-    StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
+        // Initialize core classes
+        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
+        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
+        std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
+        AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
+
+        // the order of declaration of these classes is important, we want dataProc destructed before storageMng
+        StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
+        DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
 
 
-    std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
+
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
 
 
-    // Connect and configure hardpix
-    if (!acqCtrl.connectDevice()){
-        printf("failed to connect to hardpix\n");
-        return EXIT_FAILURE;
+        // Connect and configure hardpix
+        if (!acqCtrl.connectDevice()){
+            printf("failed to connect to hardpix\n");
+            return EXIT_FAILURE;
+        }
+        acqCtrl.loadConfig(acqTime);
+        
+        // Acquire
+        // TODO we need to finalize what condition causes us to stop acquiring
+        acqCtrl.runAcq();
+
+        // Note: destructors handle cleanup
     }
-    acqCtrl.loadConfig();
-    
-    // Acquire
-    // TODO we need to finalize what condition causes us to stop acquiring
-    acqCtrl.runAcq();
+    catch(const std::exception & e)
+    {
+       std::cerr << "Caught exception of type: " << typeid(e).name() 
+                  << " - Message: " << e.what() << std::endl;
+    }
 
-    // Note: destructors handle cleanup
-    
     return 0;
 }

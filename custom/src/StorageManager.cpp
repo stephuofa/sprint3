@@ -62,7 +62,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     
 // }
 
-#define MAX_RAW 5
+#define MAX_RAW 100
 void StorageManager::handleRawHits(std::stop_token stopToken){
     printf("smRaw thread launched\n");
 
