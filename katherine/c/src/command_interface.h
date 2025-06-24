@@ -111,16 +111,6 @@ katherine_cmd6_long(katherine_udp_t *udp, char val6, long value)
     return katherine_cmd(udp, &cmd, sizeof(cmd));
 }
 
-static inline int
-katherine_cmd6_uint32(katherine_udp_t *udp, char val6, uint32_t value)
-{
-    char cmd[8] = {0};
-    cmd[6] = val6;
-    katherine_cmd_uint32(cmd, value);
-
-    return katherine_cmd(udp, &cmd, sizeof(cmd));
-}
-
 static inline void
 katherine_cmd_uint32(char *cmd, uint32_t value){
     int i = 0;
@@ -135,6 +125,18 @@ katherine_cmd_uint32(char *cmd, uint32_t value){
         cmd[i++] = (char) ((0xff & mlsb) | (0xff & mmsb) << 4);
     }
 }
+
+static inline int
+katherine_cmd6_uint32(katherine_udp_t *udp, char val6, uint32_t value)
+{
+    char cmd[8] = {0};
+    cmd[6] = val6;
+    katherine_cmd_uint32(cmd, value);
+
+    return katherine_cmd(udp, &cmd, sizeof(cmd));
+}
+
+
 
 static inline int
 katherine_cmd6_float(katherine_udp_t* udp, char val6, float value)
