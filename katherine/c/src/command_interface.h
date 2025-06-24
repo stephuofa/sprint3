@@ -121,7 +121,7 @@ katherine_cmd6_uint32(katherine_udp_t *udp, char val6, uint32_t value)
     return katherine_cmd(udp, &cmd, sizeof(cmd));
 }
 
-static inline int
+static inline void
 katherine_cmd_uint32(char *cmd, uint32_t value){
     int i = 0;
     int mlsb, mmsb;

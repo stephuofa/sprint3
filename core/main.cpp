@@ -80,44 +80,37 @@ int main (){
 
     // Get run number and increment it
     int runInt = getRunNum();
-    
     std::string runNum = updateRunNum(runInt);
 
     // Start Logging
     std::string logFileName = "output/logs/log_run" + runNum + ".txt";
     Logger logger(logFileName);
 
-    // Connect to HardPix
-    // TODO
-
     // Initialize core classes
     std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
     std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
     std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
-
     AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
     DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
     StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
-
     std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
 
-    // Configure Acquisition Settings
+    // Connect and configure hardpix
     if (!acqCtrl.connectDevice()){
         printf("failed to connect to hardpix\n");
         return EXIT_FAILURE;
     }
     acqCtrl.loadConfig();
     
-    // // Acquire
-    // // TODO change this condition
+    // Acquire
+    // TODO we need to finalize what condition causes us to stop acquiring
     acqCtrl.runAcq();
 
-
-
     // Tidy Up
-    // TODO - endd connnection with HP
     dataProc.finish();
     storageMngr.finish();
+    // Note: destructor for internal classes cleans up
+    // device connections when we go out of scope
     
     return 0;
 }
