@@ -8,6 +8,7 @@
 #include <queue>
 #include <condition_variable>
 #include <katherinexx/katherinexx.hpp>
+#include <thread>
 
 using mode = katherine::acq::f_toa_tot;
 
@@ -56,7 +57,7 @@ template <typename T> class SafeBuff final{
 
 
 template <typename T>
-void safe_finish(std::jthread& t, std::shared_ptr<SafeQueue<T>> safeQ){
+inline void safe_finish(std::jthread& t, std::shared_ptr<SafeQueue<T>> safeQ){
     t.request_stop();
     safeQ->cv_.notify_all();
     if(t.joinable()){

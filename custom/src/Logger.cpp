@@ -5,7 +5,7 @@
 
 Logger::Logger(const std::string& filename):logFile_(std::ofstream(filename)){
     if (!logFile_.is_open()) {
-        throw std::exception("Could not open log file");
+        throw std::runtime_error("Could not open log file");
     }
     log(LogLevel::LL_INFO, "logfile created");
 }
