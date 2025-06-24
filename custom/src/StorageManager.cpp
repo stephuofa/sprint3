@@ -8,6 +8,11 @@ StorageManager::StorageManager(std::string rn,std::shared_ptr<SafeQueue<SpeciesH
     rawThread = std::jthread([&](std::stop_token stoken){this->handleRawHits(stoken);});
 }
 
+StorageManager::~StorageManager(){
+    safe_finish(speciesThread,speciesHitsQ);
+    safe_finish(rawThread,rawHitsToWriteBuff);
+}
+
 
 // TODO - reduce code duplication btw this and raw hits
 #define MAX_SPECIES 10
@@ -101,7 +106,3 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
     printf("smRaw thread terminated\n");
 }
 
-void StorageManager::finish(){
-    safe_finish(speciesThread,speciesHitsQ);
-    safe_finish(rawThread,rawHitsToWriteBuff);
-}

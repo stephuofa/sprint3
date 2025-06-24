@@ -26,7 +26,7 @@ class AcqController final{
 
         void frame_started(int frame_idx);
         void frame_ended(int frame_idx, bool completed, const katherine_frame_info_t& info);
-        void pixels_received(const std::chrono::time_point<std::chrono::system_clock>& tp, const mode::pixel_type *px, size_t count);
+        void pixels_received(const mode::pixel_type *px, size_t count);
 
 
     public:

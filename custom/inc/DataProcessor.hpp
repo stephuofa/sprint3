@@ -15,12 +15,12 @@
  */
 class DataProcessor final{
     private:
-        std::jthread dpThread;
         std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff;
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ;
+        std::jthread dpThread;
 
     public:
         DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>>,std::shared_ptr<SafeQueue<SpeciesHit>>);
+        ~DataProcessor();
         void processRawHits(std::stop_token stopToken);
-        void finish();
 };

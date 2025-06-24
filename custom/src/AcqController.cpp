@@ -36,7 +36,7 @@ bool AcqController::connectDevice(){
 
     bool devConnected = false;
     for(size_t i = 0; i < 5 ; i++){
-        printf("creating sockets attempt %i\n",i);
+        printf("creating sockets attempt %lu\n",i);
 
         try
         {
@@ -60,7 +60,7 @@ bool AcqController::connectDevice(){
 
     devConnected = false;
     for(size_t i = 0; i < 5; i++){
-        printf("test connection attempt %i...",i);
+        printf("test connection attempt %lu...",i);
 
         try
         {
@@ -153,11 +153,11 @@ AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_
 
 #define rawCountNotifInc 10
 void
-AcqController::pixels_received(const std::chrono::time_point<std::chrono::system_clock>& tp,const mode::pixel_type *px, size_t count)
+AcqController::pixels_received(const mode::pixel_type *px, size_t count)
 {
     nHits += count;
 
-    for (int i = 0; i < count; i++){
+    for (size_t i = 0; i < count; i++){
 
     }
 
@@ -192,7 +192,7 @@ bool AcqController::runAcq(){
 
     acq.set_frame_started_handler(std::bind_front(&AcqController::frame_started,this));
     acq.set_frame_ended_handler(std::bind_front(&AcqController::frame_ended,this));
-    acq.set_pixels_received_handler(std::bind_front(&AcqController::pixels_received, this, std::chrono::system_clock::now()));
+    acq.set_pixels_received_handler(std::bind_front(&AcqController::pixels_received, this));
 
     acq.begin(config, katherine::readout_type::data_driven);
     std::cerr << "Acquisition started." << std::endl;

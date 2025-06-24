@@ -5,6 +5,11 @@ rawHitsBuff(rhq),speciesHitsQ(shq){
     dpThread =  std::jthread([&](std::stop_token stoken){this->processRawHits(stoken);});
 }
 
+
+DataProcessor::~DataProcessor(){
+    safe_finish(dpThread,rawHitsBuff);
+}
+
 void print_raw_hit(struct RawHit& rh){
     printf("x:%i y:%i\n",rh.x_,rh.y_);
 }
@@ -39,7 +44,7 @@ void DataProcessor::processRawHits(std::stop_token stopToken){
             // x------x----------x-x-x---------x
             auto prevHit = workBuf[0];
             bool prevHitDQ = false;
-            for(int i = 1; i < workBufElements; i++)
+            for(size_t  i = 1; i < workBufElements; i++)
             {
                 const auto curHit = workBuf[i];
                 if(curHit.toa - prevHit.toa > 5){
@@ -68,8 +73,4 @@ void DataProcessor::processRawHits(std::stop_token stopToken){
         
     }
     printf("Data Processor thread terminated\n");
-}
-
-void DataProcessor::finish(){
-    safe_finish(dpThread,rawHitsBuff);
 }

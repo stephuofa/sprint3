@@ -41,6 +41,7 @@ void createReqPaths(){
     }
 }
 
+// TODO - if you fail to get run number, scan instead of doing a random int
 int getRunNum(){
     auto runNumFile = std::ifstream(PATH_TO_RUN_NUM_FILE); // will be closed automatically when we go out of scope
     if(!runNumFile.is_open()){
@@ -51,7 +52,7 @@ int getRunNum(){
         int runInt;
         try{
             runInt = std::stoi(line);
-        } catch (std::invalid_argument){
+        } catch (const std::invalid_argument &){
             printf("Failed to get runNum as int - Assigning Random\n");
             return -1;
         }
@@ -91,9 +92,14 @@ int main (){
     std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
     std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
     AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
+
+    // the order of declaration of these classes is important, we want dataProc destructed before storageMng
     DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
     StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
-    std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to lauch
+
+
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
+
 
     // Connect and configure hardpix
     if (!acqCtrl.connectDevice()){
@@ -106,11 +112,7 @@ int main (){
     // TODO we need to finalize what condition causes us to stop acquiring
     acqCtrl.runAcq();
 
-    // Tidy Up
-    dataProc.finish();
-    storageMngr.finish();
-    // Note: destructor for internal classes cleans up
-    // device connections when we go out of scope
+    // Note: destructors handle cleanup
     
     return 0;
 }
