@@ -31,7 +31,7 @@ class AcqController final{
 
     public:
         AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w);
-        void loadConfig();
+        void loadConfig(size_t acqTimeSec);
         bool testConnection();
         bool connectDevice();
         bool runAcq();

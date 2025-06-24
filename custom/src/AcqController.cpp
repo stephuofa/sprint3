@@ -83,11 +83,11 @@ bool AcqController::connectDevice(){
     return devConnected;
 }
 
-void AcqController::loadConfig(){
+void AcqController::loadConfig(const size_t acqTimeSec){
     using namespace std::literals::chrono_literals;
 
     config.set_bias_id(0);
-    config.set_acq_time(25s);
+    config.set_acq_time(std::chrono::seconds(acqTimeSec));
     config.set_no_frames(1);
     config.set_bias(0); // V
 
@@ -132,8 +132,7 @@ AcqController::frame_started(int frame_idx)
 {
     nHits = 0;
 
-    std::cerr << "Started frame " << frame_idx << "." << std::endl;
-    std::cerr << "X\tY\tToA\tfToA\tToT" << std::endl;
+    std::cerr << "Started Frame #" << frame_idx << std::endl;
 }
 
 void
@@ -141,8 +140,8 @@ AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_
 {
     const double recv_perc = 100. * info.received_pixels / info.sent_pixels;
 
-    std::cerr << std::endl << std::endl;
-    std::cerr << "Ended frame " << frame_idx << "." << std::endl;
+    std::cerr << std::endl;
+    std::cerr << "Ended Frame #" << frame_idx << std::endl;
     std::cerr << " - tpx3->katherine lost " << info.lost_pixels << " pixels" << std::endl
                 << " - katherine->pc sent " << info.sent_pixels << " pixels" << std::endl
                 << " - katherine->pc received " << info.received_pixels << " pixels (" << recv_perc << " %)" << std::endl
@@ -156,10 +155,6 @@ void
 AcqController::pixels_received(const mode::pixel_type *px, size_t count)
 {
     nHits += count;
-
-    for (size_t i = 0; i < count; i++){
-
-    }
 
     {
         std::lock_guard lk(rawHitsBuff->mtx_);
@@ -195,7 +190,6 @@ bool AcqController::runAcq(){
     acq.set_pixels_received_handler(std::bind_front(&AcqController::pixels_received, this));
 
     acq.begin(config, katherine::readout_type::data_driven);
-    std::cerr << "Acquisition started." << std::endl;
 
     auto tic = steady_clock::now();
     acq.read();
