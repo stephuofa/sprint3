@@ -157,6 +157,11 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
 {
     nHits += count;
 
+    for(size_t i = 0; i < count; ++i)
+    {
+        printf("raw hit: x-%u, y-%u, toa-%u, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
+    }
+
     {
         std::lock_guard lk(rawHitsBuff->mtx_);
         std::memcpy(rawHitsBuff->buf_+ rawHitsBuff->numElements_,px,count*sizeof(mode::pixel_type));

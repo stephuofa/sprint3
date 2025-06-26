@@ -69,7 +69,7 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
     uint16_t count = MAX_RAW + 1;
     uint64_t fileNo = 0;
     std::ofstream outFile;
-    while(!stopToken.stop_requested() || rawHitsToWriteBuff->numElements_){
+    while(!stopToken.stop_requested() || rawHitsToWriteBuff->numElements_){ // TODO cleaner end of while
         // change to a new file, if its got too big
         if (count > MAX_RAW){
             if(outFile.is_open()){
@@ -94,12 +94,10 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             }
 
             for(size_t i = 0; i < rawHitsToWriteBuff->numElements_; i++){
-                outFile << "x: " << (unsigned) rawHitsToWriteBuff->buf_[i].coord.x << "   y:"  << (unsigned) rawHitsToWriteBuff->buf_[i].coord.y << "   toa: " << rawHitsToWriteBuff->buf_[i].toa << std::endl;
+                outFile << (unsigned) rawHitsToWriteBuff->buf_[i].coord.x << " " << (unsigned) rawHitsToWriteBuff->buf_[i].coord.y << " " << rawHitsToWriteBuff->buf_[i].toa << " " << rawHitsToWriteBuff->buf_[i].tot << std::endl;
             }
             rawHitsToWriteBuff->numElements_ = 0;
         }
-        
-        
     }
     outFile.flush();
     outFile.close();

@@ -83,6 +83,11 @@ katherine_udp_init(katherine_udp_t *u, uint16_t local_port, const char *remote_a
         }
     }
 
+    int optval;
+    socklen_t = optlen
+    getsockopt(u->sock,SOL_SOCKET,SO_RECVBUF, &optval, &optlen);
+    printf("receive buff size is :%u\n");
+
     // Set remote socket address.
     u->addr_remote.sin_family = AF_INET;
     u->addr_remote.sin_port = htons(remote_port);
