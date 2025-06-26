@@ -86,11 +86,9 @@ katherine_udp_init(katherine_udp_t *u, uint16_t local_port, const char *remote_a
 
     int actual_recv_buf_size;
     int optlen_check = sizeof(actual_recv_buf_size);
-    if (getsockopt(u->sock, SOL_SOCKET, SO_RCVBUF, (char*)&actual_recv_buf_size, &optlen_check) == SOCKET_ERROR) {
-        res = WSAGetLastError();
-        printf("Cant get sock opt SO_RCVBUF: %i\n", res);
+    if (getsockopt(u->sock, SOL_SOCKET, SO_RCVBUF, (char*)&actual_recv_buf_size, &optlen_check)) {
+        printf("Cant get sock opt SO_RCVBUF\n");
     } else {
-        printf("Requested recv buffer size: %u bytes\n", requested_recv_buf_size);
         printf("Actual recv buffer size: %u bytes\n", actual_recv_buf_size);
     }
 

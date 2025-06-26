@@ -159,7 +159,7 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
 
     for(size_t i = 0; i < count; ++i)
     {
-        printf("raw hit: x-%u, y-%u, toa-%u, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
+        printf("raw hit: x-%u, y-%u, toa-%lu, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
     }
 
     {
