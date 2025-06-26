@@ -132,7 +132,7 @@ AcqController::frame_started(int frame_idx)
 {
     nHits = 0;
 
-    std::cerr << "Started Frame... " << std::endl;
+    std::cerr << "Started Frame #" << frame_idx << std::endl;
 }
 
 void
@@ -141,7 +141,7 @@ AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_
     const double recv_perc = 100. * info.received_pixels / info.sent_pixels;
 
     std::cerr << std::endl;
-    std::cerr << "Ended Frame " << std::endl;
+    std::cerr << "Ended Frame #" << frame_idx << std::endl;
     std::cerr << " - tpx3->katherine lost " << info.lost_pixels << " pixels" << std::endl
                 << " - katherine->pc sent " << info.sent_pixels << " pixels" << std::endl
                 << " - katherine->pc received " << info.received_pixels << " pixels (" << recv_perc << " %)" << std::endl
