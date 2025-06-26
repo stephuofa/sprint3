@@ -1,4 +1,5 @@
 #include "StorageManager.hpp"
+#include "globals.h"
 #include <fstream>
 #include <functional>
 #include <string>
@@ -15,16 +16,15 @@ StorageManager::~StorageManager(){
 
 
 // TODO - reduce code duplication btw this and raw hits
-#define MAX_SPECIES 10
 void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     printf("smSpecies thread launched\n");
 
-    uint16_t count = MAX_SPECIES + 1;
+    uint16_t count = MAX_SPECIES_FILE_LINES + 1;
     uint64_t fileNo = 0;
     std::ofstream outFile;
     while(!stopToken.stop_requested() || !speciesHitsQ->q_.empty())
     {
-        if (count > MAX_SPECIES)
+        if (count > MAX_SPECIES_FILE_LINES)
         {
             if(outFile.is_open())
             {
@@ -62,16 +62,16 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     
 // }
 
-#define MAX_RAW 1000
+
 void StorageManager::handleRawHits(std::stop_token stopToken){
     printf("smRaw thread launched\n");
 
-    uint16_t count = MAX_RAW + 1;
+    uint16_t count = MAX_RAW_FILE_LINES + 1;
     uint64_t fileNo = 0;
     std::ofstream outFile;
     while(!stopToken.stop_requested() || rawHitsToWriteBuff->numElements_){ // TODO cleaner end of while
         // change to a new file, if its got too big
-        if (count > MAX_RAW){
+        if (count > MAX_RAW_FILE_LINES){
             if(outFile.is_open()){
                 outFile.flush();
                 outFile.close();

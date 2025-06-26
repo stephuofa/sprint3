@@ -10,6 +10,7 @@
 #include "DataProcessor.hpp"
 #include "StorageManager.hpp"
 #include "CustomDataTypes.hpp"
+#include "globals.h"
 #include <fstream>
 #include <chrono>
 #include <stdio.h>
@@ -104,12 +105,31 @@ std::string updateRunNum(int runInt)
     return runNum;
 }
 
+bool debugPrints = false;
 int main (int argc, char* argv[]){
+        
+
     try
     {
-        size_t acqTime = 10;
-        if (argc > 1){ acqTime = std::stoi(argv[1]); }
-
+        size_t acqTime;
+        try
+        {
+            if (argc < 2)
+            {
+                throw std::runtime_error("");
+            }
+            acqTime = std::stoi(argv[1]);
+            if (argc > 2) {debugPrints = true;}
+            printf("Acquisition Time Setting = %lu s\n", acqTime);
+            printf("Print statements %s\n\n", debugPrints?"ON":"OFF");
+        }
+        catch (const std::exception&)
+        {
+            printf("Error parsing command line arguments!\n");
+            printf("Should take the form:\n");
+            printf("sprint <acq_time_seconds> [-v (for verbose)]\n");
+            return EXIT_SUCCESS;
+        }
         // make paths for output data
         createReqPaths();
 

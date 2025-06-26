@@ -1,4 +1,5 @@
 #include "DataProcessor.hpp"
+#include "globals.h"
 
 DataProcessor::DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeQueue<SpeciesHit>> shq):
 rawHitsBuff(rhq),speciesHitsQ(shq){

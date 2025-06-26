@@ -2,10 +2,7 @@
 
 #include <stdio.h>
 #include <iostream>
-
-#define RAW_HIT_BLOCK_SIZE 2
-
-
+#include "globals.h"
 
 AcqController::AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w):
  rawHitsBuff(rhq), rawHitsToWriteBuff(rh2w) {}
@@ -151,17 +148,19 @@ AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_
     std::cerr << "Ended Frame " << std::endl;
 }
 
-#define rawCountNotifInc 10
 void
 AcqController::pixels_received(const mode::pixel_type *px, size_t count)
 {
     nHits += count;
 
-    for(size_t i = 0; i < count; ++i)
-    {
-        printf("raw hit: x-%u, y-%u, toa-%lu, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
+    if (debugPrints){
+        for(size_t i = 0; i < count; ++i)
+        {
+            printf("raw hit: x-%u, y-%u, toa-%lu, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
+        }
+        fflush(stdout);
     }
-
+    
     {
         std::lock_guard lk(rawHitsBuff->mtx_);
         std::memcpy(rawHitsBuff->buf_+ rawHitsBuff->numElements_,px,count*sizeof(mode::pixel_type));
@@ -174,7 +173,7 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
         std::lock_guard lk(rawHitsToWriteBuff->mtx_);
         std::memcpy(rawHitsToWriteBuff->buf_ + rawHitsToWriteBuff->numElements_,px,count*sizeof(mode::pixel_type));
         rawHitsToWriteBuff->numElements_ += count;
-        notifyRaw = (rawHitsToWriteBuff->numElements_ > rawCountNotifInc);
+        notifyRaw = (rawHitsToWriteBuff->numElements_ > RAW_HIT_NOTIF_INC);
     }
     if(notifyRaw){
         rawHitsToWriteBuff->cv_.notify_one();

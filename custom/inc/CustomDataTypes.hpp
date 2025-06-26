@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <katherinexx/katherinexx.hpp>
 #include <thread>
+#include "globals.h"
 
 using mode = katherine::acq::f_toa_tot;
 
@@ -16,7 +17,6 @@ enum class Species {
     XRAY_GRD0,
     OTHER,
 };
-
 
 
 struct RawHit {
@@ -45,7 +45,7 @@ template <typename T> class SafeQueue final{
         std::mutex mtx_;
 };
 
-#define MAX_BUFF_SIZE 500
+
 template <typename T> class SafeBuff final{
     public:
         T buf_[MAX_BUFF_SIZE];
