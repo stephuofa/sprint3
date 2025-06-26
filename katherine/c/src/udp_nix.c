@@ -74,6 +74,7 @@ katherine_udp_init(katherine_udp_t *u, uint16_t local_port, const char *remote_a
 
     if (timeout_ms > 0) {
         // Set socket timeout.
+        printf("with timeout of %u ms\n", timeout_ms);
         struct timeval timeout;
         timeout.tv_sec = timeout_ms / 1000;
         timeout.tv_usec = 1000 * (timeout_ms % 1000);
@@ -84,9 +85,11 @@ katherine_udp_init(katherine_udp_t *u, uint16_t local_port, const char *remote_a
     }
 
     int optval;
-    socklen_t = optlen
-    getsockopt(u->sock,SOL_SOCKET,SO_RECVBUF, &optval, &optlen);
-    printf("receive buff size is :%u\n");
+    socklen_t optlen;
+    if(getsockopt(u->sock,SOL_SOCKET, SO_RCVBUF, &optval, &optlen)){
+        printf("error\n");
+    }
+    printf("receive buff size is :%u\n",optval);
 
     // Set remote socket address.
     u->addr_remote.sin_family = AF_INET;

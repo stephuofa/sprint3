@@ -64,7 +64,7 @@ int getRunNum(){
 
 std::string parseForRunNum()
 {
-    size_t maxNum = 0;
+    int maxNum = 0;
     std::regex file_regex(R"(rawHits_RN-(\d+)_FN-\d+\.txt)");
 
     for (const auto& entry : std::filesystem::directory_iterator("output/data/raw"))
