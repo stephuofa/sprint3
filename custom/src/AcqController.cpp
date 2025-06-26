@@ -171,8 +171,25 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     bool notifyRaw = false;
     {
         std::lock_guard lk(rawHitsToWriteBuff->mtx_);
-        std::memcpy(rawHitsToWriteBuff->buf_ + rawHitsToWriteBuff->numElements_,px,count*sizeof(mode::pixel_type));
-        rawHitsToWriteBuff->numElements_ += count;
+
+        size_t filledBytes = (rawHitsToWriteBuff->numElements_)*sizeof(mode::pixel_type);
+        size_t newBytes = count*sizeof(mode::pixel_type);
+
+        size_t discardedPixels = 0;
+        if (MAX_BUFF_SIZE < filledBytes + newBytes)
+        {
+            size_t discardedBytes = filledBytes + newBytes - MAX_BUFF_SIZE;
+            size_t discardedPixels = (discardedBytes + (sizeof(mode::pixel_type) - 1))/ sizeof(mode::pixel_type);
+            discardedBytes = discardedPixels * sizeof(mode::pixel_type); // this must be in increments of sizeof(mode::pixel_type)
+            newBytes -= discardedBytes;
+
+            // TODO - log overflow
+            printf("buff overflow, discarding %lu raw hits",discardedPixels);
+            
+        }
+
+        std::memcpy(rawHitsToWriteBuff->buf_ + rawHitsToWriteBuff->numElements_ , px, newBytes);
+        rawHitsToWriteBuff->numElements_ += count - discardedPixels;
         notifyRaw = (rawHitsToWriteBuff->numElements_ > RAW_HIT_NOTIF_INC);
     }
     if(notifyRaw){
