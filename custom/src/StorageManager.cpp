@@ -62,7 +62,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     
 // }
 
-#define MAX_RAW 100
+#define MAX_RAW 1000
 void StorageManager::handleRawHits(std::stop_token stopToken){
     printf("smRaw thread launched\n");
 
@@ -96,6 +96,7 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             for(size_t i = 0; i < rawHitsToWriteBuff->numElements_; i++){
                 outFile << (unsigned) rawHitsToWriteBuff->buf_[i].coord.x << " " << (unsigned) rawHitsToWriteBuff->buf_[i].coord.y << " " << rawHitsToWriteBuff->buf_[i].toa << " " << rawHitsToWriteBuff->buf_[i].tot << std::endl;
             }
+            count += rawHitsToWriteBuff->numElements_;
             rawHitsToWriteBuff->numElements_ = 0;
         }
     }

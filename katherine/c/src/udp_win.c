@@ -89,10 +89,26 @@ katherine_udp_init(katherine_udp_t *u, uint16_t local_port, const char *remote_a
         }
     }
 
-    int recv_buf_size;
-    int optlen;
-    getsockopt(u->sock, SOL_SOCKET, SO_RCVBUF, (char*)&recv_buf_size, &optlen);
-    printf("recv length is: %u\n",recv_buf_size);
+    int requested_recv_buf_size = 1024 * 1024 * 2; // Try 2 MB
+    if (setsockopt(u->sock, SOL_SOCKET, SO_RCVBUF, (char*)&requested_recv_buf_size, sizeof(requested_recv_buf_size)) == SOCKET_ERROR) {
+        res = WSAGetLastError();
+        printf("Cant set sock opt SO_RCVBUF: %i\n", res);
+    }
+
+    int actual_recv_buf_size;
+    int optlen_check = sizeof(actual_recv_buf_size);
+    if (getsockopt(u->sock, SOL_SOCKET, SO_RCVBUF, (char*)&actual_recv_buf_size, &optlen_check) == SOCKET_ERROR) {
+        res = WSAGetLastError();
+        printf("Cant get sock opt SO_RCVBUF: %i\n", res);
+    } else {
+        printf("Requested recv buffer size: %u bytes\n", requested_recv_buf_size);
+        printf("Actual recv buffer size: %u bytes\n", actual_recv_buf_size);
+    }
+// --- END ADDED SECTION ---
+
+// Setup and bind the socket address.
+u->addr_local.sin_family = AF_INET;
+// ... rest of your code
 
     // Set remote socket address.
     u->addr_remote.sin_family = AF_INET;

@@ -286,6 +286,7 @@ katherine_acquisition_fini(katherine_acquisition_t *acq)
             res = katherine_udp_recv(&acq->device->data_socket, acq->md_buffer, &received);\
             \
             if (res) {\
+                if (res != 0x274C) {printf("exception in udp_recv - code 0x%X\n", res);}\
                 duration = 1000 * difftime(time(NULL), last_data_received);\
                 if (acq->report_timeout > 0 && duration > acq->report_timeout && acq->pixel_buffer_valid > 0) {\
                     flush_buffer(acq);\
