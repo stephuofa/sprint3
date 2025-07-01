@@ -120,7 +120,7 @@ int main (int argc, char* argv[]){
             }
             acqTime = std::stoi(argv[1]);
             if (argc > 2) {debugPrints = true;}
-            printf("Acquisition Time Setting = %lu s\n", acqTime);
+            printf("Acquisition Time Setting = %zu s\n", acqTime);
             printf("Print statements %s\n\n", debugPrints?"ON":"OFF");
         }
         catch (const std::exception&)
@@ -173,6 +173,7 @@ int main (int argc, char* argv[]){
     {
        std::cerr << "Caught exception of type: " << typeid(e).name() 
                   << " - Message: " << e.what() << std::endl;
+        std::cerr.flush();
     }
 
     return 0;

@@ -33,7 +33,7 @@ bool AcqController::connectDevice(){
 
     bool devConnected = false;
     for(size_t i = 0; i < 5 ; i++){
-        printf("creating sockets attempt %lu\n",i);
+        printf("creating sockets attempt %zu\n",i);
 
         try
         {
@@ -57,7 +57,7 @@ bool AcqController::connectDevice(){
 
     devConnected = false;
     for(size_t i = 0; i < 5; i++){
-        printf("test connection attempt %lu...",i);
+        printf("test connection attempt %zu...",i);
 
         try
         {
@@ -156,41 +156,21 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     if (debugPrints){
         for(size_t i = 0; i < count; ++i)
         {
-            printf("raw hit: x-%u, y-%u, toa-%lu, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
+            printf("raw hit: x-%u, y-%u, toa-%llu, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
         }
         fflush(stdout);
     }
     
     {
-        std::lock_guard lk(rawHitsBuff->mtx_);
-        std::memcpy(rawHitsBuff->buf_+ rawHitsBuff->numElements_,px,count*sizeof(mode::pixel_type));
-        rawHitsBuff->numElements_ += count;
+        std::unique_lock lk(rawHitsBuff->mtx_);
+        rawHitsBuff->addElements(count,px);        
     }
     rawHitsBuff->cv_.notify_one();
 
     bool notifyRaw = false;
     {
-        std::lock_guard lk(rawHitsToWriteBuff->mtx_);
-
-        size_t filledBytes = (rawHitsToWriteBuff->numElements_)*sizeof(mode::pixel_type);
-        size_t newBytes = count*sizeof(mode::pixel_type);
-
-        size_t discardedPixels = 0;
-        if (MAX_BUFF_SIZE < filledBytes + newBytes)
-        {
-            size_t discardedBytes = filledBytes + newBytes - MAX_BUFF_SIZE;
-            size_t discardedPixels = (discardedBytes + (sizeof(mode::pixel_type) - 1))/ sizeof(mode::pixel_type);
-            discardedBytes = discardedPixels * sizeof(mode::pixel_type); // this must be in increments of sizeof(mode::pixel_type)
-            newBytes -= discardedBytes;
-
-            // TODO - log overflow
-            printf("buff overflow, discarding %lu raw hits",discardedPixels);
-            
-        }
-
-        std::memcpy(rawHitsToWriteBuff->buf_ + rawHitsToWriteBuff->numElements_ , px, newBytes);
-        rawHitsToWriteBuff->numElements_ += count - discardedPixels;
-        notifyRaw = (rawHitsToWriteBuff->numElements_ > RAW_HIT_NOTIF_INC);
+        std::unique_lock lk(rawHitsToWriteBuff->mtx_);
+        notifyRaw = (rawHitsToWriteBuff->addElements(count,px) > MAX_RAW_FILE_LINES);
     }
     if(notifyRaw){
         rawHitsToWriteBuff->cv_.notify_one();

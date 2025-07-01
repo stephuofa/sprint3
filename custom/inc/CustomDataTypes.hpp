@@ -11,8 +11,6 @@
 #include <thread>
 #include "globals.h"
 
-using mode = katherine::acq::f_toa_tot;
-
 enum class Species {
     XRAY_GRD0,
     OTHER,
@@ -48,11 +46,56 @@ template <typename T> class SafeQueue final{
 
 template <typename T> class SafeBuff final{
     public:
-        T buf_[MAX_BUFF_SIZE];
-        uint16_t numElements_ = 0;
+        T buf_[MAX_BUFF_EL];
+        uint64_t numElements_ = 0;
         
         std::condition_variable cv_;
         std::mutex mtx_;
+
+        inline uint64_t addElements(size_t newElCount, const T* newBuf)
+        {
+            size_t discardedElCount = 0;
+            size_t allEl = this->numElements_ + newElCount;
+            size_t elToAddCount = newElCount;
+            if (MAX_BUFF_EL < allEl)
+            {
+                discardedElCount = allEl - MAX_BUFF_EL;
+                elToAddCount -= discardedElCount;
+
+                // TODO - log overflow
+                if (debugPrints){ printf("buff overflow, discarding %lu elements\n",discardedElCount);}
+            }
+
+            std::memcpy(this->buf_ + this->numElements_, newBuf, elToAddCount*sizeof(T));
+            this->numElements_ += elToAddCount;
+            return this->numElements_;
+        }
+
+        inline int copyClear(T* copyBuf, size_t maxCopyBufElements)
+        {
+            // max items we can copy is minimum of (number of elements in this->buf) and (max space in copyBuf)
+            bool reorgRequired = true; 
+            size_t maxElToCopy = maxCopyBufElements;
+            if (this->numElements_ < maxElToCopy)
+            {
+                reorgRequired = false;
+                maxElToCopy = this->numElements_;
+            }
+            
+            std::memcpy(copyBuf, this->buf_, maxElToCopy*sizeof(T));
+            if (reorgRequired)
+            {
+                size_t uncopiedElements = (this->numElements_ - maxElToCopy);
+                std::memcpy(this->buf_,this->buf_+maxElToCopy,uncopiedElements * sizeof(T));
+                this->numElements_ = uncopiedElements;
+            }
+            else
+            {
+                this->numElements_ = 0;
+            }
+
+            return maxElToCopy;
+        }
 };
 
 
