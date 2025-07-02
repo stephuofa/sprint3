@@ -17,13 +17,13 @@ void print_raw_hit(struct RawHit& rh){
 }
 
 void DataProcessor::processRawHits(std::stop_token stopToken){
-    try{
+    mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
+    size_t workBufElements = 0;
 
+    try{
     printf("Data Processor thread launched\n");
     // stop only when we've been requested to AND all the data has been processed
 
-    mode::pixel_type workBuf [MAX_BUFF_EL];
-    size_t workBufElements = 0;
     while(!stopToken.stop_requested()){
 
         { // scope of lock on rawHitsBuff
@@ -117,6 +117,7 @@ void DataProcessor::processRawHits(std::stop_token stopToken){
         }
         speciesHitsQ->cv_.notify_one();
     printf("Data Processor thread terminated\n");
+    delete[] workBuf;
 }
 catch(const std::exception & e)
     {

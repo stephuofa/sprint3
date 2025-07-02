@@ -97,12 +97,15 @@ catch(const std::exception & e)
 void StorageManager::handleRawHits(std::stop_token stopToken){
     try
     {
+        mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
+        size_t workBufElements = 0;
         printf("smRaw thread launched\n");
 
         uint64_t count = MAX_RAW_FILE_LINES + 1;
         uint64_t fileNo = 0;
         std::ofstream outFile;
-        while(!stopToken.stop_requested()){
+        while(!stopToken.stop_requested())
+        {
             // change to a new file, if its got too big
             if (count > MAX_RAW_FILE_LINES){
                 if(outFile.is_open()){
@@ -121,30 +124,25 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             
             {
                 std::unique_lock lk(rawHitsToWriteBuff->mtx_);
-                if(!stopToken.stop_requested()){
-                    rawHitsToWriteBuff->cv_.wait(lk, [&]{
-                    return stopToken.stop_requested() || rawHitsToWriteBuff->numElements_ > 0;
-                    });
-                }
-
-                for(size_t i = 0; i < rawHitsToWriteBuff->numElements_; i++){
-                    outFile << (unsigned) rawHitsToWriteBuff->buf_[i].coord.x << " " << (unsigned) rawHitsToWriteBuff->buf_[i].coord.y << " " << rawHitsToWriteBuff->buf_[i].toa << " " << rawHitsToWriteBuff->buf_[i].tot << std::endl;
-                }
-                count += rawHitsToWriteBuff->numElements_;
-                rawHitsToWriteBuff->numElements_ = 0;
+                workBufElements = rawHitsToWriteBuff->copyClear(workBuf,MAX_BUFF_EL);
             }
+            
+            for(size_t i = 0; i < workBufElements; i++)
+            {
+                outFile << (unsigned) workBuf[i].coord.x << " " << (unsigned) workBuf[i].coord.y << " " << workBuf[i].toa << " " << workBuf[i].tot << std::endl;
+            }
+            count += workBufElements;
         }
 
-        // Do any final processing
         {
             std::unique_lock lk(rawHitsToWriteBuff->mtx_);
-            for(size_t i = 0; i < rawHitsToWriteBuff->numElements_; i++)
-            {
-                outFile << (unsigned) rawHitsToWriteBuff->buf_[i].coord.x << " " << (unsigned) rawHitsToWriteBuff->buf_[i].coord.y << " " << rawHitsToWriteBuff->buf_[i].toa << " " << rawHitsToWriteBuff->buf_[i].tot << std::endl;
+            workBufElements = rawHitsToWriteBuff->copyClear(workBuf,MAX_BUFF_EL);
             }
-            count += rawHitsToWriteBuff->numElements_;
-            rawHitsToWriteBuff->numElements_ = 0;
-        }
+            printf("final print\n");
+            for(size_t i = 0; i < workBufElements; i++)
+            {
+                outFile << (unsigned) workBuf[i].coord.x << " " << (unsigned) workBuf[i].coord.y << " " << workBuf[i].toa << " " << workBuf[i].tot << std::endl;
+            }
         outFile.flush();
         outFile.close();
         printf("smRaw thread terminated\n");

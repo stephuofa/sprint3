@@ -46,7 +46,7 @@ template <typename T> class SafeQueue final{
 
 template <typename T> class SafeBuff final{
     public:
-        T buf_[MAX_BUFF_EL];
+        T* buf_;
         uint64_t numElements_ = 0;
         
         std::condition_variable cv_;
@@ -64,6 +64,7 @@ template <typename T> class SafeBuff final{
 
                 // TODO - log overflow
                 if (debugPrints){ printf("buff overflow, discarding %lu elements\n",discardedElCount);}
+                printf("buff overflow, discarding %lu elements\n",discardedElCount);
             }
 
             std::memcpy(this->buf_ + this->numElements_, newBuf, elToAddCount*sizeof(T));
@@ -88,6 +89,7 @@ template <typename T> class SafeBuff final{
                 size_t uncopiedElements = (this->numElements_ - maxElToCopy);
                 std::memcpy(this->buf_,this->buf_+maxElToCopy,uncopiedElements * sizeof(T));
                 this->numElements_ = uncopiedElements;
+                printf("numElements is %llu\n",this->numElements_);
             }
             else
             {
@@ -95,6 +97,16 @@ template <typename T> class SafeBuff final{
             }
 
             return maxElToCopy;
+        }
+
+        SafeBuff()
+        {
+            buf_ = new T [MAX_BUFF_EL];
+        }
+
+        ~SafeBuff()
+        {
+            delete [] buf_;
         }
 };
 
