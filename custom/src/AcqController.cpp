@@ -199,6 +199,7 @@ bool AcqController::runAcq(){
 
     double duration = duration_cast<milliseconds>(toc - tic).count() / 1000.;
     std::cerr << std::endl;
+    // TODO - write this to logger instead
     std::cerr << "Acquisition completed:" << std::endl
                 << " - state: " << katherine::str_acq_state(acq.state()) << std::endl
                 << " - received " << acq.completed_frames() << " complete frames" << std::endl
