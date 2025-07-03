@@ -23,4 +23,5 @@ class DataProcessor final{
         DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>>,std::shared_ptr<SafeQueue<SpeciesHit>>);
         ~DataProcessor();
         void processRawHits(std::stop_token stopToken);
+        void doProcessing(mode::pixel_type* workBuf, size_t workBufElements);
 };

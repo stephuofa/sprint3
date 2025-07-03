@@ -152,8 +152,6 @@ void
 AcqController::pixels_received(const mode::pixel_type *px, size_t count)
 {
     nHits += count;
-    printf("got %zu hits\n", count);
-
     if (debugPrints){
         for(size_t i = 0; i < count; ++i)
         {
@@ -172,11 +170,9 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     {
         std::unique_lock lk(rawHitsToWriteBuff->mtx_);
         uint64_t total = rawHitsToWriteBuff->addElements(count,px);
-        printf("total el count = %llu\n",total);
         notifyRaw = (total > RAW_HIT_NOTIF_INC);
     }
     if(notifyRaw){
-        printf("notifying raw writer\n");
         rawHitsToWriteBuff->cv_.notify_one();
     }
 }

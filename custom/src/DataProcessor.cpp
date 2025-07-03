@@ -16,6 +16,44 @@ void print_raw_hit(struct RawHit& rh){
     printf("x:%i y:%i\n",rh.x_,rh.y_);
 }
 
+void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElements)
+{
+    std::sort(workBuf,workBuf+workBufElements,[](const mode::pixel_type& a, const mode::pixel_type& b){ return a.toa < b.toa;});
+        
+        { // scope of lock on speciesHits
+            std::unique_lock lk(speciesHitsQ->mtx_);
+
+            // classify "lone hit" aka grade 0 xrays
+            // x------x----------x-x-x---------x
+            auto prevHit = workBuf[0];
+            bool prevHitDQ = false;
+            for(size_t  i = 1; i < workBufElements; i++)
+            {
+                const auto curHit = workBuf[i];
+                if(curHit.toa - prevHit.toa > 5){
+                    // right side good
+                    if (!prevHitDQ){
+                        // left side good
+                        // todo grab info from hit
+                        speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
+                    } else{
+                        // left side for next hit is good
+                        prevHitDQ = false;
+                    }
+                } else{
+                    // right size bad -> left side of next hit dq'ed
+                    prevHitDQ = true;
+                }
+                prevHit = curHit;
+            }
+            // last element is a special case since there is nothing to disqualify it from RHS
+            if(!prevHitDQ){
+                speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
+            }
+        }
+        speciesHitsQ->cv_.notify_one();
+}
+
 void DataProcessor::processRawHits(std::stop_token stopToken){
     mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
     size_t workBufElements = 0;
@@ -36,86 +74,16 @@ void DataProcessor::processRawHits(std::stop_token stopToken){
             if(!rawHitsBuff->numElements_) { continue ;} // in case of spurious wake up
             workBufElements = rawHitsBuff->copyClear(workBuf,MAX_BUFF_EL);
         }
-
-        std::sort(workBuf,workBuf+workBufElements,[](const mode::pixel_type& a, const mode::pixel_type& b){ return a.toa < b.toa;});
-        
-        { // scope of lock on speciesHits
-            std::unique_lock lk(speciesHitsQ->mtx_);
-
-            // classify "lone hit" aka grade 0 xrays
-            // x------x----------x-x-x---------x
-            auto prevHit = workBuf[0];
-            bool prevHitDQ = false;
-            for(size_t  i = 1; i < workBufElements; i++)
-            {
-                const auto curHit = workBuf[i];
-                if(curHit.toa - prevHit.toa > 5){
-                    // right side good
-                    if (!prevHitDQ){
-                        // left side good
-                        // todo grab info from hit
-                        speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
-                    } else{
-                        // left side for next hit is good
-                        prevHitDQ = false;
-                    }
-                } else{
-                    // right size bad -> left side of next hit dq'ed
-                    prevHitDQ = true;
-                }
-                prevHit = curHit;
-            }
-            // last element is a special case since there is nothing to disqualify it from RHS
-            if(!prevHitDQ){
-                speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
-            }
-        }
-        speciesHitsQ->cv_.notify_one();
-
-        
+        doProcessing(workBuf,workBufElements);
     }
-    // Do final processing
 
-        { // scope of lock on rawHitsBuff
-            std::unique_lock lk(rawHitsBuff->mtx_);
-            // we have acquire lock and can do processing
-            workBufElements = rawHitsBuff->copyClear(workBuf,MAX_BUFF_EL);
-        }
+    // In case any data is left after we've been requested to terminate
+    { 
+        std::unique_lock lk(rawHitsBuff->mtx_);
+        workBufElements = rawHitsBuff->copyClear(workBuf,MAX_BUFF_EL);
+    }
+    doProcessing(workBuf,workBufElements);
 
-        std::sort(workBuf,workBuf+workBufElements,[](const mode::pixel_type& a, const mode::pixel_type& b){ return a.toa < b.toa;});
-        
-        { // scope of lock on speciesHits
-            std::unique_lock lk(speciesHitsQ->mtx_);
-
-            // classify "lone hit" aka grade 0 xrays
-            // x------x----------x-x-x---------x
-            auto prevHit = workBuf[0];
-            bool prevHitDQ = false;
-            for(size_t  i = 1; i < workBufElements; i++)
-            {
-                const auto curHit = workBuf[i];
-                if(curHit.toa - prevHit.toa > 5){
-                    // right side good
-                    if (!prevHitDQ){
-                        // left side good
-                        // todo grab info from hit
-                        speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
-                    } else{
-                        // left side for next hit is good
-                        prevHitDQ = false;
-                    }
-                } else{
-                    // right size bad -> left side of next hit dq'ed
-                    prevHitDQ = true;
-                }
-                prevHit = curHit;
-            }
-            // last element is a special case since there is nothing to disqualify it from RHS
-            if(!prevHitDQ){
-                speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
-            }
-        }
-        speciesHitsQ->cv_.notify_one();
     printf("Data Processor thread terminated\n");
     delete[] workBuf;
 }

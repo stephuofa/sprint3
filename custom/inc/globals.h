@@ -11,6 +11,6 @@ bool extern debugPrints;
 const size_t RAW_HIT_NOTIF_INC = 1000;
 const size_t MAX_BUFF_EL = 65536;
 
-const size_t MAX_RAW_FILE_LINES = 10000;
-const size_t MAX_SPECIES_FILE_LINES = 10000;
-const size_t MAX_BURST_FILE_LINES = 10000;
+const size_t MAX_RAW_FILE_LINES = 33554432;
+const size_t MAX_SPECIES_FILE_LINES = 33554432;
+const size_t MAX_BURST_FILE_LINES = 33554432;

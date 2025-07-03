@@ -126,7 +126,6 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
                 std::unique_lock lk(rawHitsToWriteBuff->mtx_);
                 workBufElements = rawHitsToWriteBuff->copyClear(workBuf,MAX_BUFF_EL);
             }
-            
             for(size_t i = 0; i < workBufElements; i++)
             {
                 outFile << (unsigned) workBuf[i].coord.x << " " << (unsigned) workBuf[i].coord.y << " " << workBuf[i].toa << " " << workBuf[i].tot << std::endl;
@@ -138,7 +137,6 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             std::unique_lock lk(rawHitsToWriteBuff->mtx_);
             workBufElements = rawHitsToWriteBuff->copyClear(workBuf,MAX_BUFF_EL);
             }
-            printf("final print\n");
             for(size_t i = 0; i < workBufElements; i++)
             {
                 outFile << (unsigned) workBuf[i].coord.x << " " << (unsigned) workBuf[i].coord.y << " " << workBuf[i].toa << " " << workBuf[i].tot << std::endl;
