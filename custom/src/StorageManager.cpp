@@ -23,7 +23,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
         
     printf("smSpecies thread launched\n");
 
-    uint16_t count = MAX_SPECIES_FILE_LINES + 1;
+    size_t count = MAX_SPECIES_FILE_LINES + 1;
     uint64_t fileNo = 0;
     std::ofstream outFile;
     while(!stopToken.stop_requested() || !speciesHitsQ->q_.empty())
