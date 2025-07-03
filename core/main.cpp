@@ -105,10 +105,9 @@ std::string updateRunNum(int runInt)
     return runNum;
 }
 
+
 bool debugPrints = false;
 int main (int argc, char* argv[]){
-        
-
     try
     {
         size_t acqTime;

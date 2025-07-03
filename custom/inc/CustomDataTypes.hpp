@@ -63,8 +63,8 @@ template <typename T> class SafeBuff final{
                 elToAddCount -= discardedElCount;
 
                 // TODO - log overflow
-                if (debugPrints){ printf("buff overflow, discarding %lu elements\n",discardedElCount);}
-                printf("buff overflow, discarding %lu elements\n",discardedElCount);
+                if (debugPrints){ printf("buff overflow, discarding %zu elements\n",discardedElCount);}
+                printf("buff overflow, discarding %zu elements\n",discardedElCount);
             }
 
             std::memcpy(this->buf_ + this->numElements_, newBuf, elToAddCount*sizeof(T));

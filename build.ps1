@@ -1,7 +1,8 @@
 param(
     [switch]$clean,
     [switch]$release,
-    [switch]$test
+    [switch]$test,
+    [switch]$min
 )
 
 if($clean){
@@ -21,6 +22,12 @@ if($test){
     cmake -DMAKE_TESTS:BOOL=ON ..
 }
 
+if($min){
+    cmake -DMAKE_MIN:BOOL=ON ..
+}
+
+
 cmake ..
 cd ..
 cmake --build build
+
