@@ -323,12 +323,12 @@ katherine_acquisition_fini(katherine_acquisition_t *acq)
         }\
     }
 
-DEFINE_ACQ_IMPL(f_toa_tot);
-DEFINE_ACQ_IMPL(toa_tot);
-DEFINE_ACQ_IMPL(f_toa_only);
-DEFINE_ACQ_IMPL(toa_only);
-DEFINE_ACQ_IMPL(f_event_itot);
-DEFINE_ACQ_IMPL(event_itot);
+DEFINE_ACQ_IMPL(f_toa_tot)
+DEFINE_ACQ_IMPL(toa_tot)
+DEFINE_ACQ_IMPL(f_toa_only)
+DEFINE_ACQ_IMPL(toa_only)
+DEFINE_ACQ_IMPL(f_event_itot)
+DEFINE_ACQ_IMPL(event_itot)
 
 #undef DEFINE_ACQ_IMPL
 

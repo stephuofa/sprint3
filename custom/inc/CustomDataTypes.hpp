@@ -89,7 +89,6 @@ template <typename T> class SafeBuff final{
                 size_t uncopiedElements = (this->numElements_ - maxElToCopy);
                 std::memcpy(this->buf_,this->buf_+maxElToCopy,uncopiedElements * sizeof(T));
                 this->numElements_ = uncopiedElements;
-                printf("numElements is %llu\n",this->numElements_);
             }
             else
             {

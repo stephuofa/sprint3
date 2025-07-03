@@ -7,7 +7,7 @@ cd build
 
 for arg in "$@"; do
     if [ "$arg" = "-min" ]; then
-        cmake -DMAKE_TESTS:BOOL=ON ..
+        cmake -DMAKE_MIN:BOOL=ON ..
         break
     fi
 done
