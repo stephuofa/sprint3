@@ -54,7 +54,8 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
             }
         
             while(!speciesHitsQ->q_.empty()){
-                outFile << "species hit: " << speciesHitsQ->q_.front().ticks_ << std::endl;
+                const auto curEl = speciesHitsQ->q_.front();
+                outFile << (int) curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
                 speciesHitsQ->q_.pop();
             }
         }
@@ -70,7 +71,8 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     
         while(!speciesHitsQ->q_.empty())
         {
-            outFile << "species hit: " << speciesHitsQ->q_.front().ticks_ << std::endl;
+            const auto curEl = speciesHitsQ->q_.front();
+                outFile << curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
             speciesHitsQ->q_.pop();
         }
     }

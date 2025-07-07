@@ -11,10 +11,10 @@
 #include <thread>
 #include "globals.h"
 
-enum class Species {
-    XRAY_GRD0,
-    OTHER,
-};
+// enum class Species {
+//     XRAY_GRD0,
+//     OTHER,
+// };
 
 
 struct RawHit {
@@ -29,11 +29,12 @@ struct RawHit {
 };
 
 struct SpeciesHit {
-    Species species_;
-    uint64_t ticks_;
-    uint16_t tot_;
+    uint8_t grade_;
+    uint64_t startTOA_;
+    uint64_t endTOA_;
+    double totalE_;
 
-   inline SpeciesHit(Species s, uint64_t tick, uint16_t tot): species_(s),ticks_(tick),tot_(tot){};
+   inline SpeciesHit(uint8_t g, uint64_t toaStart, uint64_t toaEnd, double e): grade_(g),startTOA_(toaStart),endTOA_(toaEnd),totalE_(e){};
 };
 
 template <typename T> class SafeQueue final{

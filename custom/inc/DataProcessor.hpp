@@ -36,6 +36,6 @@ class DataProcessor final{
         ~DataProcessor();
         void processRawHits(std::stop_token stopToken);
         void doProcessing(mode::pixel_type* workBuf, size_t workBufElements);
-        size_t getEnergy(mode::pixel_type& px);
+        double getEnergy(const mode::pixel_type& px);
         bool loadEnergyCalib(const std::string& calibFolderPath);
 };

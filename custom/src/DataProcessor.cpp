@@ -27,7 +27,7 @@ std::unordered_map<uint8_t,uint8_t> gradeLookup =
     {18,6}, {22,6}, {50,6}, {54,6}, {80,6},{81,6},{208,6},{209,6},
 };
 
-int gradeLookup[3][3] =
+int gridValue[3][3] =
     {
         {32, 64, 128},
         {8,   0,  16},
@@ -48,42 +48,92 @@ void print_raw_hit(struct RawHit& rh){
     printf("x:%i y:%i\n",rh.x_,rh.y_);
 }
 
+// inclusive start and end, TODO - add energy
+uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd,double totEnergy, mode::pixel_type* buf)
+{
+    // too many hits to be an x-ray
+    if (endInd - startInd + 1 > 9){return 9;} 
+
+    uint8_t sum = 0;
+    for (size_t curInd = startInd; curInd <= endInd; ++curInd)
+    {
+        int xOffset = buf[curInd].coord.x - buf[maxEInd].coord.x;
+        if (abs(xOffset) > 1) { return 9; } // hit out of bounds
+
+        int yOffset = buf[curInd].coord.y - buf[maxEInd].coord.y;
+        if (abs(yOffset > 1)) { return 9; } // hit out of bounds
+
+        sum += gridValue[yOffset + 1][xOffset + 1]; // map from {-1, 0, 1} to {0, 1, 2} indice
+    }
+
+    const auto itr = gradeLookup.find(sum);
+    if(itr == gradeLookup.end()) { return 9; } // bad grade lookup
+
+    return itr->second;
+}
+
 void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElements)
 {
+    if(!workBufElements) { return; }
+
     std::sort(workBuf,workBuf+workBufElements,[](const mode::pixel_type& a, const mode::pixel_type& b){ return a.toa < b.toa;});
         
-        { // scope of lock on speciesHits
-            std::unique_lock lk(speciesHitsQ->mtx_);
+    { // scope of lock on speciesHits
+        std::unique_lock lk(speciesHitsQ->mtx_);
 
-            // classify "lone hit" aka grade 0 xrays
-            // x------x----------x-x-x---------x
-            auto prevHit = workBuf[0];
-            bool prevHitDQ = false;
-            for(size_t  i = 1; i < workBufElements; i++)
-            {
-                const auto curHit = workBuf[i];
-                if(curHit.toa - prevHit.toa > 5){
-                    // right side good
-                    if (!prevHitDQ){
-                        // left side good
-                        // todo grab info from hit
-                        speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
-                    } else{
-                        // left side for next hit is good
-                        prevHitDQ = false;
-                    }
-                } else{
-                    // right size bad -> left side of next hit dq'ed
-                    prevHitDQ = true;
+        // classify hits into "clusters" and process to find species hits
+        // {x}------{x-x-xx-x-x-x}----------{x-x-x}----
+        auto clustStartInd = 0;
+        auto maxEInd = 0;
+        auto clustTOAStart = workBuf[0].toa;
+        auto clustTOAMax = clustTOAStart + 5;
+        double maxEnergy = getEnergy(workBuf[0]);
+        double totEnergy = maxEnergy;
+
+
+        for(size_t  i = 1; i < workBufElements; i++)
+        {
+            const auto curHit = workBuf[i];
+            if(curHit.toa < clustTOAMax){
+                // hit belongs to cluster
+
+                // update cluster max time
+                clustTOAMax = curHit.toa + 5;
+
+                // update cluster energy
+                auto curE = getEnergy(curHit);
+                totEnergy += curE;
+
+                // if applicable, update cluster center
+                if (curE > maxEInd) 
+                {
+                    maxEInd = i;
+                    maxEnergy = curE;
                 }
-                prevHit = curHit;
-            }
-            // last element is a special case since there is nothing to disqualify it from RHS
-            if(!prevHitDQ){
-                speciesHitsQ->q_.push(SpeciesHit(Species::XRAY_GRD0,prevHit.toa,prevHit.tot));
+
+            } else{
+                // end of cluster reached, (cur element i does not belong)
+
+                // perform analysis on this cluster and send its data to be saved
+                uint8_t grd = getClusterGrade(clustStartInd,i-1,maxEInd,totEnergy,workBuf);
+                speciesHitsQ->q_.emplace(grd,clustTOAStart,clustTOAMax-5,totEnergy);
+                
+                // reset cluster stats
+                clustStartInd = i;
+                maxEInd = i;
+                clustTOAStart = curHit.toa;
+                clustTOAMax = clustTOAStart + 5;
+                double maxEnergy = getEnergy(workBuf[0]);
+                double totEnergy = maxEnergy;
             }
         }
-        speciesHitsQ->cv_.notify_one();
+
+        // after exiting the loop we need to deal process the final cluster
+        uint8_t grd = getClusterGrade(clustStartInd,workBufElements-1,maxEInd,totEnergy,workBuf);
+        speciesHitsQ->q_.emplace(grd,clustTOAStart,clustTOAMax-5,totEnergy);
+
+    }
+    speciesHitsQ->cv_.notify_one();
 }
 
 void DataProcessor::processRawHits(std::stop_token stopToken){
@@ -131,7 +181,7 @@ catch(const std::exception & e)
 static constexpr uint16_t chipWidth = 256;
 static constexpr uint16_t chipHeight = 256;
 static constexpr uint32_t chipArea = chipWidth * chipHeight;
-size_t DataProcessor::getEnergy(mode::pixel_type& px)
+double DataProcessor::getEnergy(const mode::pixel_type& px)
 {
     size_t pixel_idx = chipWidth*px.coord.y + px.coord.x; 
     uint16_t tot = px.tot;
