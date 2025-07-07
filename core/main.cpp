@@ -147,23 +147,29 @@ int main (int argc, char* argv[]){
         AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
 
         // the order of declaration of these classes is important, we want dataProc destructed before storageMng
+        printf("Launching threads...\n");
         StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
         DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
-
-
-
         std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
+        printf("\n");
 
+        printf("Loading energy calibration files...\n");
+        if (!dataProc.loadEnergyCalib("todo-use this path to retrieve calib files")){return EXIT_SUCCESS;}
+        printf("\n");
 
         // Connect and configure hardpix
+        printf("conecting to hardpix...\n");
         if (!acqCtrl.connectDevice()){
             printf("failed to connect to hardpix\n");
             return EXIT_FAILURE;
         }
         acqCtrl.loadConfig(acqTime);
+        printf("\n");
+
         
         // Acquire
         // TODO we need to finalize what condition causes us to stop acquiring
+        printf("launching acquisition...");
         acqCtrl.runAcq();
 
         // Note: destructors handle cleanup

@@ -1,4 +1,5 @@
 #include "DataProcessor.hpp"
+#include <fstream>
 #include "globals.h"
 #include <iostream>
 
@@ -94,3 +95,72 @@ catch(const std::exception & e)
         std::cerr.flush();
     }
 }
+
+// TODO extract to better location
+static constexpr uint16_t chipWidth = 256;
+static constexpr uint16_t chipHeight = 256;
+static constexpr uint32_t chipArea = chipWidth * chipHeight;
+size_t DataProcessor::getEnergy(mode::pixel_type& px)
+{
+    size_t pixel_idx = chipWidth*px.coord.y + px.coord.x; 
+    uint16_t tot = px.tot;
+    const CalibConstants& lookup{ lookupMatrix[pixel_idx] };
+    const double k = lookup.bat - tot;
+    double energy = lookup.ita * (tot + lookup.atb + std::sqrt(k * k + lookup.fac));
+
+    if (energy > 918) {
+    // Distortion level reached - slightly depends on values used energy response completely
+    // breaks down above 1800 keV.
+    energy = energy - 0.888 * (energy - 918);
+    }
+
+    return energy;
+}
+
+// true if successful, false if load failed for any reason
+bool loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount)
+{
+    std::ifstream file(path);
+    if(!file.is_open()){
+        std::cout << "failed to open file " << path << std::endl;
+        return false;
+    }
+
+    std::string line;
+    while(std::getline(file,line))
+    {
+        double val;
+        std::stringstream ss(line);
+        while (ss >> val)
+        {
+            dst.push_back(val);
+        }
+    }
+
+    file.close();
+
+    return expectedCount == dst.size();
+}
+
+bool DataProcessor::loadEnergyCalib(const std::string& calibFolderPath)
+{
+    // TODO: if we fail, use reasonable values
+    std::vector<double> a,b,c,t;
+    size_t n = chipArea;
+    if (!loadConstants(a,"core/calib/a.txt",n)){return false;}
+    if (!loadConstants(b,"core/calib/b.txt",n)){return false;}
+    if (!loadConstants(c,"core/calib/c.txt",n)){return false;}
+    if (!loadConstants(t,"core/calib/t.txt",n)){return false;}
+
+    lookupMatrix.resize(n);
+    for (size_t i = 0; i < n; ++i)
+    {
+        CalibConstants& value{ lookupMatrix[i] };
+        value.bat = b[i] + a[i] * t[i];
+        value.ita = 1 / (2 * a[i]);
+        value.atb = a[i] * t[i] - b[i];
+        value.fac = 4 * a[i] * c[i];
+    }
+    return true;
+}
+

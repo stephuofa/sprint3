@@ -102,7 +102,7 @@ katherine_udp_init(katherine_udp_t *u, uint16_t local_port, const char *remote_a
         printf("Cant get sock opt SO_RCVBUF: %i\n", res);
     } else {
         printf("Requested recv buffer size: %u bytes\n", requested_recv_buf_size);
-        printf("Actual recv buffer size: %u bytes\n\n", actual_recv_buf_size);
+        printf("Actual recv buffer size: %u bytes\n", actual_recv_buf_size);
     }
 // --- END ADDED SECTION ---
 
