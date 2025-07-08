@@ -273,6 +273,8 @@ katherine_acquisition_fini(katherine_acquisition_t *acq)
         time_t last_data_received = time(NULL);\
         double duration;\
         double kill_off_time = acq->fail_timeout <= 0 ? -1 : acq->requested_frames * acq->requested_frame_duration + (double) acq->fail_timeout / 1000.0;\
+        printf("kill off time is: %f\n",kill_off_time);\
+        printf("requested frame duration is: %f\n",acq->requested_frame_duration);\
         int res;\
         \
         size_t i;\
@@ -293,6 +295,15 @@ katherine_acquisition_fini(katherine_acquisition_t *acq)
                 \
                 duration = difftime(time(NULL), acq->acq_start_time);\
                 if (kill_off_time > 0 && duration > kill_off_time) {\
+                    time_t current_t = time(NULL);\
+                    printf("!!! TIMEOUT IMMINENT !!!\n");\
+                    printf("  kill_off_time:  %f\n", kill_off_time);\
+                    printf("  calculated duration: %f\n", duration);\
+                    printf("  acq pointer address: %p\n", (void*)acq);\
+                    printf("  acq_start_time address: %p\n", (void*)&(acq->acq_start_time));\
+                    printf("  acq_start_time value: %zu\n", acq->acq_start_time);\
+                    printf("  current_t value:  %zu\n", current_t);\
+                    \
                     acq->state = ACQUISITION_TIMED_OUT;\
                 }\
                 \

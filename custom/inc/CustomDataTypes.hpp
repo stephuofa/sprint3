@@ -73,7 +73,7 @@ template <typename T> class SafeBuff final{
             return this->numElements_;
         }
 
-        inline int copyClear(T* copyBuf, size_t maxCopyBufElements)
+        inline size_t copyClear(T* copyBuf, size_t maxCopyBufElements)
         {
             // max items we can copy is minimum of (number of elements in this->buf) and (max space in copyBuf)
             bool reorgRequired = true; 

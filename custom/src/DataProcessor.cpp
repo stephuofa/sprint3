@@ -27,7 +27,7 @@ std::unordered_map<uint8_t,uint8_t> gradeLookup =
     {18,6}, {22,6}, {50,6}, {54,6}, {80,6},{81,6},{208,6},{209,6},
 };
 
-int gridValue[3][3] =
+uint8_t gridValue[3][3] =
     {
         {32, 64, 128},
         {8,   0,  16},
@@ -49,7 +49,7 @@ void print_raw_hit(struct RawHit& rh){
 }
 
 // inclusive start and end, TODO - add energy
-uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd,double totEnergy, mode::pixel_type* buf)
+uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd, mode::pixel_type* buf)
 {
     // too many hits to be an x-ray
     if (endInd - startInd + 1 > 9){return 9;} 
@@ -83,8 +83,8 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
 
         // classify hits into "clusters" and process to find species hits
         // {x}------{x-x-xx-x-x-x}----------{x-x-x}----
-        auto clustStartInd = 0;
-        auto maxEInd = 0;
+        size_t clustStartInd = 0;
+        size_t maxEInd = 0;
         auto clustTOAStart = workBuf[0].toa;
         auto clustTOAMax = clustTOAStart + 5;
         double maxEnergy = getEnergy(workBuf[0]);
@@ -115,7 +115,7 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
                 // end of cluster reached, (cur element i does not belong)
 
                 // perform analysis on this cluster and send its data to be saved
-                uint8_t grd = getClusterGrade(clustStartInd,i-1,maxEInd,totEnergy,workBuf);
+                uint8_t grd = getClusterGrade(clustStartInd,i-1,maxEInd,workBuf);
                 speciesHitsQ->q_.emplace(grd,clustTOAStart,clustTOAMax-5,totEnergy);
                 
                 // reset cluster stats
@@ -123,13 +123,13 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
                 maxEInd = i;
                 clustTOAStart = curHit.toa;
                 clustTOAMax = clustTOAStart + 5;
-                double maxEnergy = getEnergy(workBuf[0]);
-                double totEnergy = maxEnergy;
+                maxEnergy = getEnergy(workBuf[0]);
+                totEnergy = maxEnergy;
             }
         }
 
         // after exiting the loop we need to deal process the final cluster
-        uint8_t grd = getClusterGrade(clustStartInd,workBufElements-1,maxEInd,totEnergy,workBuf);
+        uint8_t grd = getClusterGrade(clustStartInd,workBufElements-1,maxEInd,workBuf);
         speciesHitsQ->q_.emplace(grd,clustTOAStart,clustTOAMax-5,totEnergy);
 
     }
