@@ -49,25 +49,26 @@ void print_raw_hit(struct RawHit& rh){
 }
 
 // inclusive start and end, TODO - add energy
+const uint8_t outlier = 7;
 uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd, mode::pixel_type* buf)
 {
     // too many hits to be an x-ray
-    if (endInd - startInd + 1 > 9){return 9;} 
+    if (endInd - startInd + 1 > 9){return outlier;} 
 
     uint8_t sum = 0;
     for (size_t curInd = startInd; curInd <= endInd; ++curInd)
     {
         int xOffset = buf[curInd].coord.x - buf[maxEInd].coord.x;
-        if (abs(xOffset) > 1) { return 9; } // hit out of bounds
+        if (abs(xOffset) > 1) { return outlier; } // hit out of bounds
 
         int yOffset = buf[curInd].coord.y - buf[maxEInd].coord.y;
-        if (abs(yOffset > 1)) { return 9; } // hit out of bounds
+        if (abs(yOffset > 1)) { return outlier; } // hit out of bounds
 
         sum += gridValue[yOffset + 1][xOffset + 1]; // map from {-1, 0, 1} to {0, 1, 2} indice
     }
 
     const auto itr = gradeLookup.find(sum);
-    if(itr == gradeLookup.end()) { return 9; } // bad grade lookup
+    if(itr == gradeLookup.end()) { return outlier; } // bad grade lookup
 
     return itr->second;
 }
@@ -117,13 +118,13 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
                 // perform analysis on this cluster and send its data to be saved
                 uint8_t grd = getClusterGrade(clustStartInd,i-1,maxEInd,workBuf);
                 speciesHitsQ->q_.emplace(grd,clustTOAStart,clustTOAMax-5,totEnergy);
-                
+
                 // reset cluster stats
                 clustStartInd = i;
                 maxEInd = i;
                 clustTOAStart = curHit.toa;
                 clustTOAMax = clustTOAStart + 5;
-                maxEnergy = getEnergy(workBuf[0]);
+                maxEnergy = getEnergy(workBuf[i]);
                 totEnergy = maxEnergy;
             }
         }
