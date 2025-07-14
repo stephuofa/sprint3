@@ -45,11 +45,7 @@ DataProcessor::~DataProcessor(){
     safe_finish(dpThread,rawHitsBuff);
 }
 
-void print_raw_hit(struct RawHit& rh){
-    printf("x:%i y:%i\n",rh.x_,rh.y_);
-}
 
-// inclusive start and end, TODO - add energy
 const uint8_t outlier = 7;
 uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd, mode::pixel_type* buf)
 {

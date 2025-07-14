@@ -7,6 +7,10 @@
 #include <fstream>
 #include <mutex>
 
+/**
+ * @enum LogLevel
+ * @brief enums describing type of log message
+ */
 enum class LogLevel {
     LL_DEBUG,
     LL_INFO,
@@ -17,14 +21,30 @@ enum class LogLevel {
 
 /**
  * @class Logger
- * @brief writes log messages to a mtx protected log file
+ * @brief writes log messages to log file
+ * 
+ * @note UNFINISHED
  */
 class Logger final{
     private:
+        //! @brief file handle for logfile
         std::ofstream logFile_;
-        std::mutex mtx_;
 
     public:
+        /**
+         * @fn Logger(const std::string& filename)
+         * @brief constructor for Logger
+         * 
+         * @param[in] filename name of log file
+         */
         Logger(const std::string& filename);
-        void log(LogLevel level, const std::string& msg);
+
+        /**
+         * @fn void log(LogLevel level, const std::string& msg)
+         * @brief writes an entry to the log file
+         * 
+         * @param[in] level type of message
+         * @param[in] msg message to write
+         */
+        void log(const LogLevel level, const std::string& msg);
 };

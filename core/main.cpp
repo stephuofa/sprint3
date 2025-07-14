@@ -44,7 +44,6 @@ void createReqPaths(){
     }
 }
 
-// TODO - if you fail to get run number, scan instead of doing a random int
 int getRunNum(){
     auto runNumFile = std::ifstream(PATH_TO_RUN_NUM_FILE); // will be closed automatically when we go out of scope
     if(!runNumFile.is_open()){
@@ -56,7 +55,6 @@ int getRunNum(){
         try{
             runInt = std::stoi(line);
         } catch (const std::invalid_argument &){
-            printf("Failed to get runNum as int - Assigning Random\n");
             return -1;
         }
         return runInt;

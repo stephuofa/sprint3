@@ -13,7 +13,6 @@ Logger::Logger(const std::string& filename):logFile_(std::ofstream(filename)){
 void Logger::log(LogLevel level, const std::string& msg){
     auto x = level; // get rid of ununsed warning for now
     x = x;
-    const std::unique_lock<std::mutex> lock(mtx_);
     // TODO add timestamp and log level
     logFile_ << msg << std::endl;
 }
