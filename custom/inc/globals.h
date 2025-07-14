@@ -1,11 +1,10 @@
 #pragma once
 #include <katherinexx/acquisition.hpp>
 
-using mode = katherine::acq::f_toa_tot;
+using mode = katherine::acq::toa_tot;
 
 // set by cmd line arg, default = false
 bool extern debugPrints;
-
 
 // how many raw hits in buffer before we notify the raw hit writter
 const size_t RAW_HIT_NOTIF_INC = 1000;
