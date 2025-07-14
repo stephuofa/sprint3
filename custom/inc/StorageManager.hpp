@@ -24,11 +24,24 @@ class StorageManager final {
         std::jthread speciesThread;
         std::jthread rawThread;
 
+        std::string header;
+        bool checkUpdateOutFile(
+    size_t& lineCount,
+    std::ofstream& outFile,
+    const std::string& filename,
+    const std::string runNum,
+    const std::string& storagePath,
+    size_t& fileNo,
+    const size_t softMaxLines);
+
     public:
         StorageManager(std::string runNum,std::shared_ptr<SafeQueue<SpeciesHit>>,std::shared_ptr<SafeBuff<mode::pixel_type>>);
         ~StorageManager();
+        void launch();
         void handleSpeciesHits(std::stop_token stopToken);
         void handleRawHits(std::stop_token stopToken);
+        void genHeader();
+
 
         // template <typename T>
         // void queueProcessWrite(std::stop_token stopToken,std::shared_ptr<SafeQueue<T>>);

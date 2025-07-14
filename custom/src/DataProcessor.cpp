@@ -35,10 +35,11 @@ uint8_t gridValue[3][3] =
     };
 
 DataProcessor::DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeQueue<SpeciesHit>> shq):
-rawHitsBuff(rhq),speciesHitsQ(shq){
+rawHitsBuff(rhq),speciesHitsQ(shq){}
+
+void DataProcessor::launch(){
     dpThread =  std::jthread([&](std::stop_token stoken){this->processRawHits(stoken);});
 }
-
 
 DataProcessor::~DataProcessor(){
     safe_finish(dpThread,rawHitsBuff);

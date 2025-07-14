@@ -110,6 +110,7 @@ bool debugPrints = false;
 int main (int argc, char* argv[]){
     try
     {
+        // parse command line args
         size_t acqTime;
         try
         {
@@ -120,7 +121,7 @@ int main (int argc, char* argv[]){
             acqTime = std::stoi(argv[1]);
             if (argc > 2) {debugPrints = true;}
             printf("Acquisition Time Setting = %zu s\n", acqTime);
-            printf("Print statements %s\n\n", debugPrints?"ON":"OFF");
+            printf("Print statements %s\n", debugPrints?"ON":"OFF");
         }
         catch (const std::exception&)
         {
@@ -129,47 +130,47 @@ int main (int argc, char* argv[]){
             printf("sprint <acq_time_seconds> [-v (for verbose)]\n");
             return EXIT_SUCCESS;
         }
+
         // make paths for output data
         createReqPaths();
 
-        // Get run number and increment it
+        // get run number and increment it
         int runInt = getRunNum();
         std::string runNum = updateRunNum(runInt);
 
-        // Start Logging
+        // start logging
         std::string logFileName = "output/logs/log_run" + runNum + ".txt";
         Logger logger(logFileName);
 
-        // Initialize core classes
+        // initialize core classes
         std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
         std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
         AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
-
         // the order of declaration of these classes is important, we want dataProc destructed before storageMng
-        printf("Launching threads...\n");
         StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
         DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
-        std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
-        printf("\n");
 
-        printf("Loading energy calibration files...\n");
+        printf("\nLoading energy calibration files...\n");
         if (!dataProc.loadEnergyCalib("todo-use this path to retrieve calib files")){return EXIT_SUCCESS;}
-        printf("\n");
 
         // Connect and configure hardpix
-        printf("conecting to hardpix...\n");
+        printf("\nConecting to hardpix...\n");
         if (!acqCtrl.connectDevice()){
             printf("failed to connect to hardpix\n");
             return EXIT_FAILURE;
         }
         acqCtrl.loadConfig(acqTime);
-        printf("\n");
-
         
         // Acquire
         // TODO we need to finalize what condition causes us to stop acquiring
-        printf("launching acquisition...");
+        printf("\nLaunching threads...\n");
+        storageMngr.genHeader();
+        storageMngr.launch();
+        dataProc.launch();
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
+
+        printf("\nLaunching acquisition...");
         acqCtrl.runAcq();
 
         // Note: destructors handle cleanup
