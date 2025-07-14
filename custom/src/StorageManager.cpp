@@ -36,7 +36,7 @@ bool StorageManager::checkUpdateOutFile(
         }
         std::string outFileName = filename + "_RN-" + runNum + "_FN-" + std::to_string(fileNo) + ".txt";
         outFile = std::ofstream(storagePath + outFileName);
-        outFile << header;
+        outFile << header.str();
         lineCount = 0;
         fileNo++;
     }
@@ -150,11 +150,97 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
 }
 
 
-void StorageManager::genHeader(){
-header =
-"# Software: sprint3 v0\n\
-# hello world\n\
-#----------------------------------------------------------------------------------------\n"
-;
+void StorageManager::genHeader(const time_t& startTime, const katherine::config& config){
+
+    std::string phase_description;
+    switch (config.phase())
+    {
+    case katherine::phase::p1 :
+            phase_description = "PHASE_1";
+        break;
+    case katherine::phase::p2 :
+            phase_description = "PHASE_2";
+        break;
+    case katherine::phase::p4 :
+            phase_description = "PHASE_4";
+        break;
+    case katherine::phase::p8 :
+            phase_description = "PHASE_8";
+        break;
+    case katherine::phase::p16 :
+            phase_description = "PHASE_6";
+        break;
+    default:
+        phase_description = "unknown";
+        break;
+    }
+
+    std::string freq_description;
+    switch (config.freq())
+    {
+    case katherine::freq::f40:
+        freq_description = "40 MHz";
+        break;
+    case katherine::freq::f80:
+        freq_description = "80 MHz";
+        break;
+    case katherine::freq::f160:
+        freq_description = "160 MHz";
+        break;
+    
+    default:
+        freq_description = "unknown";
+        break;
+    }
+
+    header << "# Software: SPRINT3 " << SOFTWARE_VERSION << std::endl;
+    header << "# Readout IP: " << HP_ADDRESS << std::endl;
+    header << "# Chip ID: " << CHIP_ID << std::endl;
+    header << "# Start of Acquisition (unix): " << startTime << std::endl;
+
+    header << "#" << std::endl;
+    header << "# ------------ Acquisition Configuration ------------" << std::endl;
+        header << "# Acquisition Time:       " << std::chrono::duration_cast<std::chrono::seconds>(config.acq_time()) << std::endl;
+        header << "# No. of Frames:          " << config.no_frames() << std::endl;
+        header << "# Bias:                   " << config.bias() << " V" << std::endl;
+        header << "#" << std::endl;
+
+        header << "# Gray Coding:            "<< (config.gray_disable() ? "disabled" : "enabled") << std::endl;
+        header << "# Polarity:               "<< (config.polarity_holes() ? "holes (h+)" : "electrons (e-)") << std::endl;
+        header << "# Phase:                  "<< phase_description << std::endl;
+        header << "# Clock Frequency:        "<< freq_description << std::endl;
+        header << "#" << std::endl;
+
+        header << "# Pixel Configuration: " << 
+            config.pixel_config().words[0] << " " << config.pixel_config().words[1] << " ... " << 
+            config.pixel_config().words[16382] << " " <<  config.pixel_config().words[16383] << std::endl;
+        header << "#" << std::endl;
+        
+        header << "# DACs:" << std::endl;
+        header << "#  - Ibias_Preamp_ON:    "<<      config.dacs().named.Ibias_Preamp_ON << std::endl;
+        header << "#  - Ibias_Preamp_OFF:   "<<      config.dacs().named.Ibias_Preamp_OFF << std::endl;
+        header << "#  - VPReamp_NCAS:       "<<      config.dacs().named.VPReamp_NCAS << std::endl;
+        header << "#  - Ibias_Ikrum:        "<<      config.dacs().named.Ibias_Ikrum << std::endl;
+        header << "#  - Vfbk:               "<<      config.dacs().named.Vfbk << std::endl;
+        header << "#  - Vthreshold_fine:    "<<      config.dacs().named.Vthreshold_fine << std::endl;
+        header << "#  - Vthreshold_coarse:  "<<      config.dacs().named.Vthreshold_coarse << std::endl;
+        header << "#  - Ibias_DiscS1_ON:    "<<      config.dacs().named.Ibias_DiscS1_ON << std::endl;
+        header << "#  - Ibias_DiscS1_OFF:   "<<      config.dacs().named.Ibias_DiscS1_OFF << std::endl;
+        header << "#  - Ibias_DiscS2_ON:    "<<      config.dacs().named.Ibias_DiscS2_ON << std::endl;
+        header << "#  - Ibias_DiscS2_OFF:   "<<      config.dacs().named.Ibias_DiscS2_OFF << std::endl;
+        header << "#  - Ibias_PixelDAC:     "<<      config.dacs().named.Ibias_PixelDAC << std::endl;
+        header << "#  - Ibias_TPbufferIn:   "<<      config.dacs().named.Ibias_TPbufferIn << std::endl;
+        header << "#  - Ibias_TPbufferOut:  "<<      config.dacs().named.Ibias_TPbufferOut<< std::endl;
+        header << "#  - VTP_coarse:         "<<      config.dacs().named.VTP_coarse << std::endl;
+        header << "#  - VTP_fine:           "<<      config.dacs().named.VTP_fine << std::endl;
+        header << "#  - Ibias_CP_PLL:       "<<      config.dacs().named.Ibias_CP_PLL << std::endl;
+        header << "#  - PLL_Vcntrl:         "<<      config.dacs().named.PLL_Vcntrl << std::endl;
+    header << "# ----  End Acquisition Configuration  ----" << std::endl;
+
+    header << "#" << std::endl;
+    header << "# raw format: x(int) y(int) toa(tics) tot(tics)" << std::endl;
+    header << "# species format: grade(int) cluster_start_toa(tics) cluster_end_toa(tics) cluster_energy(keV)" << std::endl;
+    header << "# NOTE: tics are since begining of acquisition; the length of a tic depends on freq" << std::endl;
+    header << "#----------------------------------------------------------------------------------------" << std::endl;
 }
 

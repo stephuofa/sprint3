@@ -25,8 +25,8 @@ bool AcqController::testConnection(){
         std::cout << e.what() << std::endl;
         return false;
     }
-    std::cout << "expected ID: " << hpChipId << " recieved ID: " << id << std::endl;
-    return id == hpChipId;
+    std::cout << "expected ID: " << CHIP_ID << " recieved ID: " << id << std::endl;
+    return id == CHIP_ID;
 }
 
 bool AcqController::connectDevice(){
@@ -37,7 +37,7 @@ bool AcqController::connectDevice(){
 
         try
         {
-            device.emplace(hpAddr);
+            device.emplace(HP_ADDRESS);
             printf("created sockets\n");
             devConnected = true;
             break;
@@ -208,4 +208,8 @@ bool AcqController::runAcq(){
                 << " - total duration: " << duration << " s" << std::endl
                 << " - throughput: " << (nHits / duration) << " hits/s" << std::endl;
     return true;
+}
+
+katherine::config AcqController::getConfig(){
+    return config;
 }

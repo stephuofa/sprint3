@@ -13,8 +13,6 @@
 
 class AcqController final{
     private:
-        const std::string hpAddr = "192.168.1.157";
-        const std::string hpChipId = "J2-W00054";
         uint64_t nHits = 0;
         // TIME of acq begine
         std::string runNum;
@@ -35,4 +33,5 @@ class AcqController final{
         bool testConnection();
         bool connectDevice();
         bool runAcq();
+        katherine::config getConfig();
 };

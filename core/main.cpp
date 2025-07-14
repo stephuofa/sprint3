@@ -165,7 +165,7 @@ int main (int argc, char* argv[]){
         // Acquire
         // TODO we need to finalize what condition causes us to stop acquiring
         printf("\nLaunching threads...\n");
-        storageMngr.genHeader();
+        storageMngr.genHeader(time(NULL),acqCtrl.getConfig());
         storageMngr.launch();
         dataProc.launch();
         std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
