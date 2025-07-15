@@ -6,8 +6,12 @@
 #include <iostream>
 
 
-StorageManager::StorageManager(const std::string& rn,std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w, std::shared_ptr<Logger> log):
-runNum(rn),speciesHitsQ(shq),rawHitsToWriteBuff(rh2w),logger(log){}
+StorageManager::StorageManager(
+    const std::string& rn,
+    std::shared_ptr<SafeQueue<SpeciesHit>> shq,
+    std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w,
+    std::shared_ptr<Logger> log
+):runNum(rn),speciesHitsQ(shq),rawHitsToWriteBuff(rh2w),logger(log){}
 
 StorageManager::~StorageManager(){
     safe_finish(speciesThread,speciesHitsQ);
@@ -15,8 +19,12 @@ StorageManager::~StorageManager(){
 }
 
 void StorageManager::launch(){
-    speciesThread = std::jthread([&](std::stop_token stoken){this->handleSpeciesHits(stoken);});
-    rawThread = std::jthread([&](std::stop_token stoken){this->handleRawHits(stoken);});
+    speciesThread = std::jthread([&](std::stop_token stoken){
+        this->handleSpeciesHits(stoken);
+    });
+    rawThread = std::jthread([&](std::stop_token stoken){
+        this->handleRawHits(stoken);
+    });
 }
 
 // creates a new output file if required
@@ -27,6 +35,7 @@ bool StorageManager::checkUpdateOutFile(
     const std::string& storagePath,
     size_t& fileNo,
     const size_t softMaxLines){
+
     std::string outFileName;
     if (lineCount > softMaxLines)
     {
@@ -35,20 +44,28 @@ bool StorageManager::checkUpdateOutFile(
             outFile.flush();
             outFile.close();
         }
-        outFileName = filename + "_RN-" + runNum + "_FN-" + std::to_string(fileNo) + ".txt";
+        outFileName = std::format(
+            "{}_RN-{}_FN-{}.txt",
+            filename,runNum,std::to_string(fileNo)
+        );
         outFile = std::ofstream(storagePath + outFileName);
         outFile << header.str();
         lineCount = 0;
         fileNo++;
     }
+
     if(!outFile.is_open()){
-        logger->log(LogLevel::LL_FATAL,std::format("cant create outputfile {}", outFileName));
+        logger->log(
+            LogLevel::LL_FATAL,
+            std::format("cant create outputfile {}", outFileName)
+        );
         return false;
     }
     return true;
 }
 
-//! @todo - minimize code duplication for writing different kinds of hits to different files
+//! @todo - minimize code duplication for writing different kinds of hits
+// to different files
 void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     try{
         
@@ -59,7 +76,14 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
         std::ofstream outFile;
         while(!stopToken.stop_requested() || !speciesHitsQ->q_.empty())
         {
-            if(!checkUpdateOutFile(count,outFile,"speciesHits",speciesPath,fileNo,MAX_SPECIES_FILE_LINES)){ 
+            if(!checkUpdateOutFile(
+                count,
+                outFile,
+                "speciesHits",
+                speciesPath,
+                fileNo,
+                MAX_SPECIES_FILE_LINES)
+            ){ 
                 return;
             }
 
@@ -73,7 +97,8 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
             
                 while(!speciesHitsQ->q_.empty()){
                     const auto curEl = speciesHitsQ->q_.front();
-                    outFile << (int) curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
+                    outFile << (int) curEl.grade_ << " " << curEl.startTOA_ << 
+                        " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
                     speciesHitsQ->q_.pop();
                 }
             }
@@ -84,7 +109,8 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
             while(!speciesHitsQ->q_.empty())
             {
                 const auto curEl = speciesHitsQ->q_.front();
-                outFile << curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
+                outFile << curEl.grade_ << " " << curEl.startTOA_ <<
+                    " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
                 speciesHitsQ->q_.pop();
             }
         }
@@ -95,7 +121,11 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     }
     catch(const std::exception & e){
         //! @todo - should we relaunch thread/program on fatal error
-        logger->log(LogLevel::LL_FATAL,std::format("caught exception in StorageManager-speciesThread: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
+        logger->log(
+            LogLevel::LL_FATAL,
+            std::format("caught exception in StorageManager-speciesThread:\
+type-[{}] msg-[{}]",typeid(e).name(),e.what())
+        );
     }
 
 }
@@ -114,7 +144,14 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
         std::ofstream outFile;
         while(!stopToken.stop_requested())
         {
-            if(!checkUpdateOutFile(count,outFile,"rawHits",rawPath,fileNo,MAX_RAW_FILE_LINES)){
+            if(!checkUpdateOutFile(
+                count,
+                outFile,
+                "rawHits",
+                rawPath,
+                fileNo,
+                MAX_RAW_FILE_LINES)
+            ){
                 //! @todo what action should we take if we can't open files 
                 return;
             }
@@ -125,7 +162,11 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             }
             for(size_t i = 0; i < workBufElements; i++)
             {
-                outFile << (unsigned) workBuf[i].coord.x << " " << (unsigned) workBuf[i].coord.y << " " << workBuf[i].toa << " " << workBuf[i].tot << std::endl;
+                outFile 
+                    << (unsigned) workBuf[i].coord.x << " " 
+                    << (unsigned) workBuf[i].coord.y << " "
+                    << workBuf[i].toa << " "
+                    << workBuf[i].tot << std::endl;
             }
             count += workBufElements;
         }
@@ -136,7 +177,11 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             }
             for(size_t i = 0; i < workBufElements; i++)
             {
-                outFile << (unsigned) workBuf[i].coord.x << " " << (unsigned) workBuf[i].coord.y << " " << workBuf[i].toa << " " << workBuf[i].tot << std::endl;
+                outFile
+                    << (unsigned) workBuf[i].coord.x << " "
+                    << (unsigned) workBuf[i].coord.y << " "
+                    << workBuf[i].toa << " "
+                    << workBuf[i].tot << std::endl;
             }
         outFile.flush();
         outFile.close();
@@ -146,13 +191,19 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
     catch(const std::exception & e)
     {
         //! @todo - should we relaunch thread/program on fatal error
-        logger->log(LogLevel::LL_FATAL,std::format("caught exception in StorageManager-rawThread: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
+        logger->log(
+            LogLevel::LL_FATAL,
+            std::format("caught exception in StorageManager-rawThread: \
+type-[{}] msg-[{}]",typeid(e).name(),e.what())
+        );
     }
 }
 
 
-void StorageManager::genHeader(const time_t& startTime, const katherine::config& config){
-
+void StorageManager::genHeader(
+    const time_t& startTime,
+    const katherine::config& config
+){
     std::string phase_description;
     switch (config.phase())
     {

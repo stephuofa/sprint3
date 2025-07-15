@@ -4,8 +4,11 @@
 #include <iostream>
 #include "globals.h"
 
-AcqController::AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w, std::shared_ptr<Logger> log):
- rawHitsBuff(rhq), rawHitsToWriteBuff(rh2w), logger(log) {}
+AcqController::AcqController(
+    std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
+    std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w,
+    std::shared_ptr<Logger> log
+): rawHitsBuff(rhq), rawHitsToWriteBuff(rh2w), logger(log) {}
 
 
 bool AcqController::testConnection(){
@@ -19,15 +22,24 @@ bool AcqController::testConnection(){
     try{
         id = device->chip_id();
     } catch(const std::exception& e){
-        logger->log(LogLevel::LL_ERROR, std::format( "exception while fetching chip id: {}",e.what()));
+        logger->log(
+            LogLevel::LL_ERROR,
+            std::format( "exception while fetching chip id: {}",e.what())
+        );
         return false;
     }
 
     if (id == CHIP_ID){
-        logger->log(LogLevel::LL_INFO,std::format("verified connection with chip id {}",id));
+        logger->log(
+            LogLevel::LL_INFO,
+            std::format("verified connection with chip id {}",id)
+        );
         return true;
     } else{
-        logger->log(LogLevel::LL_ERROR,std::format("bad chip ID (expected: {}, actual:{})",CHIP_ID,id));
+        logger->log(
+            LogLevel::LL_ERROR,
+            std::format("bad chip ID (expected: {}, actual:{})",CHIP_ID,id)
+        );
         return false;
     }
 }
@@ -45,7 +57,10 @@ bool AcqController::connectDevice(){
         } 
         catch (const std::exception& e)
         {
-            logger->log(LogLevel::LL_ERROR, std::format("failed to create sockets - {}",e.what()));
+            logger->log(
+                LogLevel::LL_ERROR,
+                std::format("failed to create sockets - {}",e.what())
+            );
             std::this_thread::sleep_for(std::chrono::seconds(3));
         }
     }
@@ -68,7 +83,10 @@ bool AcqController::connectDevice(){
         }
         catch(const std::exception& e)
         {
-            logger->log(LogLevel::LL_ERROR, std::format("exception thrown during connection test: {}",e.what()));
+            logger->log(
+                LogLevel::LL_ERROR,
+                std::format("exception thrown during connection test: {}",e.what())
+            );
         }
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
@@ -128,26 +146,28 @@ void AcqController::loadConfig(const size_t acqTimeSec){
 }
 
 void
-AcqController::frame_started(int frame_idx)
-{
+AcqController::frame_started(int frame_idx){
     nHits = 0;
 
     logger->log(LogLevel::LL_INFO,"acq frame started");
 }
 
 void
-AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_info_t& info)
-{
+AcqController::frame_ended(
+    int frame_idx, bool completed,
+    const katherine_frame_info_t& info
+){
     const double recv_perc = 100. * info.received_pixels / info.sent_pixels;
 
     std::stringstream ss;
     ss << "Ended Frame #" << frame_idx
-            << " [tpx3->katherine lost " << info.lost_pixels << " pixels" << "]"
-            << " [katherine->pc sent " << info.sent_pixels << " pixels" << "]"
-            << " [katherine->pc received " << info.received_pixels << " pixels (" << recv_perc << " %)" << "]"
-            << " [state: " << (completed ? "completed" : "not completed") << "]"
-            << " [start time: " << info.start_time.d << "]"
-            << " [end time: " << info.end_time.d << "]";
+    << " [tpx3->katherine lost " << info.lost_pixels << " pixels" << "]"
+    << " [katherine->pc sent " << info.sent_pixels << " pixels" << "]"
+    << " [katherine->pc received " << info.received_pixels << " pixels ("
+        << recv_perc << " %)" << "]"
+    << " [state: " << (completed ? "completed" : "not completed") << "]"
+    << " [start time: " << info.start_time.d << "]"
+    << " [end time: " << info.end_time.d << "]";
     logger->log(LogLevel::LL_INFO, ss.str());
 }
 
@@ -159,7 +179,8 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     if (debugPrints){
         for(size_t i = 0; i < count; ++i)
         {
-            printf("raw hit: x-%u, y-%u, toa-%zu, tot-%u\n",px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
+            printf("raw hit: x-%u, y-%u, toa-%zu, tot-%u\n",
+                px[i].coord.x, px[i].coord.y,px[i].toa, px[i].tot);
         }
         fflush(stdout);
     }
@@ -170,7 +191,11 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     }
     rawHitsBuff->cv_.notify_one();
     if(discarded){
-        logger->log(LogLevel::LL_WARNING, std::format("buffer overflow in AcqController::pixels_received - forced to discard %zu elements from rawHitsBuff",discarded));
+        logger->log(
+            LogLevel::LL_WARNING,
+            std::format("buffer overflow in AcqController::pixels_received \
+- forced to discard %zu elements from rawHitsBuff",discarded)
+        );
     }
 
     bool notifyRaw = false;
@@ -183,7 +208,11 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
         rawHitsToWriteBuff->cv_.notify_one();
     }
     if(discarded){
-        logger->log(LogLevel::LL_WARNING, std::format("buffer overflow in AcqController::pixels_received - forced to discard %zu elements from rawHitsToWriteBuff",discarded));
+        logger->log(
+            LogLevel::LL_WARNING,
+            std::format("buffer overflow in AcqController::pixels_received \
+- forced to discard %zu elements from rawHitsToWriteBuff",discarded)
+        );
     }
 }
 
@@ -195,11 +224,24 @@ bool AcqController::runAcq(){
     using namespace std::chrono;
     using namespace std::literals::chrono_literals;
 
-    katherine::acquisition<mode> acq{device.value(), katherine::md_size * 34952533, sizeof(mode::pixel_type) * 65536, 500ms, 10s, true};
+    katherine::acquisition<mode> acq{
+        device.value(),
+        katherine::md_size * 34952533,
+        sizeof(mode::pixel_type) * 65536,
+        500ms,
+        10s,
+        true
+    };
 
-    acq.set_frame_started_handler(std::bind_front(&AcqController::frame_started,this));
-    acq.set_frame_ended_handler(std::bind_front(&AcqController::frame_ended,this));
-    acq.set_pixels_received_handler(std::bind_front(&AcqController::pixels_received, this));
+    acq.set_frame_started_handler(
+        std::bind_front(&AcqController::frame_started,this)
+    );
+    acq.set_frame_ended_handler(
+        std::bind_front(&AcqController::frame_ended,this)
+    );
+    acq.set_pixels_received_handler(
+        std::bind_front(&AcqController::pixels_received, this)
+    );
 
     acq.begin(config, katherine::readout_type::data_driven);
 
@@ -210,12 +252,13 @@ bool AcqController::runAcq(){
     double duration = duration_cast<milliseconds>(toc - tic).count() / 1000.;
     std::stringstream ss;
     ss << "Acquisition completed:" 
-                << " [state: " << katherine::str_acq_state(acq.state()) << "]"
-                << " [received " << acq.completed_frames() << " complete frames" << "]"
-                << " [dropped " << acq.dropped_measurement_data() << " measurement data items" << "]"
-                << " [total hits: " << nHits << "]"
-                << " [total duration: " << duration << " s" << "]"
-                << " [throughput: " << (nHits / duration) << " hits/s" << "]";
+    << " [state: " << katherine::str_acq_state(acq.state()) << "]"
+    << " [received " << acq.completed_frames() << " complete frames" << "]"
+    << " [dropped " << acq.dropped_measurement_data() <<
+        " measurement data items" << "]"
+    << " [total hits: " << nHits << "]"
+    << " [total duration: " << duration << " s" << "]"
+    << " [throughput: " << (nHits / duration) << " hits/s" << "]";
     logger->log(LogLevel::LL_INFO,ss.str());
     return true;
 }

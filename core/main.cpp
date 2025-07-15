@@ -47,7 +47,7 @@ void createReqPaths(){
 }
 
 int getRunNum(){
-    auto runNumFile = std::ifstream(PATH_TO_RUN_NUM_FILE); // will be closed automatically when we go out of scope
+    auto runNumFile = std::ifstream(PATH_TO_RUN_NUM_FILE); 
     if(!runNumFile.is_open()){
         return -1;
     } else{
@@ -94,13 +94,15 @@ std::string updateRunNum(int runInt)
 {
     std::string runNum;
     if (runInt < 0){
-        // we failed to get a valid run_int -> search through output and find the highest
+        // we failed to get a valid run_int
+        //-> search through output and find the highest
         runNum = parseForRunNum();
     } else{
         runNum = std::to_string(runInt+1);
     }
     
-    auto runNumFile = std::ofstream(PATH_TO_RUN_NUM_FILE); // will overwrite existing and close when out of scope
+    // will overwrite existing and close when out of scope
+    auto runNumFile = std::ofstream(PATH_TO_RUN_NUM_FILE); 
     runNumFile << runNum;
     return runNum;
 }
@@ -144,13 +146,12 @@ int main (int argc, char* argv[]){
         logger = std::make_shared<Logger>(logFileName);
 
         // create data pipes
-        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
-        std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
-        std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
+        auto rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
+        auto rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
+        auto speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
 
         // initialize core classes
         AcqController acqCtrl(rawHitsBuff, rawHitsToWriteBuff, logger);
-        // the order of declaration of these classes is important, we want dataProc destructed before storageMng
         StorageManager storageMngr(runNum, speciesHitsQ, rawHitsToWriteBuff, logger);
         DataProcessor dataProc(rawHitsBuff, speciesHitsQ, logger);
 
@@ -171,17 +172,30 @@ int main (int argc, char* argv[]){
         storageMngr.genHeader(time(NULL),acqCtrl.getConfig());
         storageMngr.launch();
         dataProc.launch();
-        std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
+        // give threads time to launch
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
 
-        printf("\nLaunching acquisition...");
+        printf("\nLaunching acquisition...\n");
         acqCtrl.runAcq();
 
-        // destructors handle cleanup
+        printf("\nAcquisition finished!\n");
+        printf("See logfile %s for info\n", logFileName.c_str());
+
+        // destructors handle thread cleanup
+        // ensure data producer cleans up before storage writers
+        dataProc.~DataProcessor(); 
     }
     catch(const std::exception & e)
     {
-        //! @todo - should we relaunch on fatal error, what if we just missed the end of acq frame and got a timeout error
-        logger->log(LogLevel::LL_FATAL,std::format("caught exception in main: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
+        //! @todo - should we relaunch on fatal error?
+        // what if we just missed the end of acq frame and got a timeout error
+        logger->log(
+            LogLevel::LL_FATAL,
+            std::format(
+                    "caught exception in main: type-[{}] msg-[{}]",
+                    typeid(e).name(),e.what()
+                )
+            );
         return EXIT_FAILURE;
     }
 

@@ -1,6 +1,7 @@
 /**
  * @file AcqController.hpp
- * @brief responsible for configuring and starting HardPix acquisitions, and sending received data to be processed
+ * @brief responsible for configuring and starting HardPix acquisitions,
+ * and sending received data to be processed
  */
 
 #pragma once
@@ -12,10 +13,12 @@
 
 /**
  * @class AcqController
- * @brief Class for configuring and controlling HardPix acuisitions, writting received data into buffers
+ * @brief Class for configuring and controlling HardPix acuisitions,
+ * writting received data into buffers
  * 
  * @note possible improvements:<br>
- * - register data received callbacks to write to queues instead of hardcoded bindings in constructor
+ * - register data received callbacks to write to queues instead of hardcoded
+ * bindings in constructor
  */
 class AcqController final{
     private:
@@ -45,10 +48,15 @@ class AcqController final{
         void frame_started(int frame_idx);
 
         /**
-         * @fn void frame_ended(int frame_idx, bool completed, const katherine_frame_info_t& info)
+         * @fn void frame_ended(int frame_idx, bool completed, 
+         * const katherine_frame_info_t& info)
          * @brief callback run when frame ended message is received
          */
-        void frame_ended(int frame_idx, bool completed, const katherine_frame_info_t& info);
+        void frame_ended(
+            int frame_idx,
+            bool completed,
+            const katherine_frame_info_t& info
+        );
 
         /**
          * @fn void pixels_received(const mode::pixel_type *px, size_t count);
@@ -58,7 +66,8 @@ class AcqController final{
 
         /**
          * @fn testConnection()
-         * @brief tests the connection to hardpix by fetching chip id and comparing to expected value
+         * @brief tests the connection to hardpix by fetching chip id and
+         * comparing to expected value
          * 
          * @return true if connection is good, else false
          */
@@ -66,14 +75,19 @@ class AcqController final{
 
     public:
         /**
-         * @fn AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w)
+         * @fn AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
+         * std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w)
          * @brief constructor for acq controller
          * 
          * @param rhq buffer of raw hits to write into, buffer gets sent for processing
-         * @param rhw2 buffer of raw hits to write into, buffer get sent to write raw data to file
+         * @param rhw2 buffer of raw hits to write into, buffer get sent for storing
          * @param log logger 
          */
-        AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w, std::shared_ptr<Logger> logger);
+        AcqController(
+            std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
+            std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w,
+            std::shared_ptr<Logger> logger
+        );
         
         /**
          * @fn loadConfig(size_t acqTimeSec);
