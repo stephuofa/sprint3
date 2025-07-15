@@ -25,28 +25,33 @@ struct SpeciesHit {
 };
 
 /**
+ * @class Resource Guard
+ * @brief a structure to protect and synchronize shared resources using a condition variable and mutex
+ */
+class ResourceGuard {
+    public:
+        std::condition_variable cv_;
+        std::mutex mtx_;
+};
+
+/**
  * @class SafeQueue
  * @brief templated class providing a mutex protected and condition_variable synchronized std::queue
  */
-template <typename T> class SafeQueue final{
+template <typename T> class SafeQueue : public ResourceGuard{
     public:
         std::queue<T> q_;
-        std::condition_variable cv_;
-        std::mutex mtx_;
 };
 
 /**
  * @class SafeBuff
  * @brief templated class providing a mutex protected and condition_variable synchronized raw array
  */
-template <typename T> class SafeBuff final{
+template <typename T> class SafeBuff : public ResourceGuard{
     public:
         T* buf_;
         uint64_t numElements_ = 0;
         
-        std::condition_variable cv_;
-        std::mutex mtx_;
-
         /**
          * @fn inline uint64_t addElements(size_t newElCount, const T* newBuf)
          * @brief add elements to buffer
@@ -137,26 +142,15 @@ template <typename T> class SafeBuff final{
 };
 
 /**
- * @fn inline void safe_finish(std::jthread& t, std::shared_ptr<SafeQueue<T>> safeQ)
- * @brief gracefully join thread that waits on a SafeQueue
+ * @fn inline void safe_finish(std::jthread& t, std::shared_ptr<SafeSomething> ss)
+ * @brief gracefully join thread that waits on a mutex and condition variable protected resource
+ * 
+ * @param t thread to join
+ * @param guard resource guard for the shared resource t waits on
  */
-template <typename T>
-inline void safe_finish(std::jthread& t, std::shared_ptr<SafeQueue<T>> safeQ){
+inline void safe_finish(std::jthread& t, std::shared_ptr<ResourceGuard> guard){
     t.request_stop();
-    safeQ->cv_.notify_all();
-    if(t.joinable()){
-        t.join();
-    }
-}
-
-/**
- * @fn inline void safe_finish(std::jthread& t, std::shared_ptr<SafeBuff<T>> safeB)
- * @brief gracefully join thread that waits on a SafeBuff
- */
-template <typename T>
-void safe_finish(std::jthread& t, std::shared_ptr<SafeBuff<T>> safeB){
-    t.request_stop();
-    safeB->cv_.notify_all();
+    guard->cv_.notify_all();
     if(t.joinable()){
         t.join();
     }
