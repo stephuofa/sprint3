@@ -21,12 +21,14 @@ struct SpeciesHit {
     uint64_t endTOA_;
     double totalE_;
 
-   inline SpeciesHit(uint8_t g, uint64_t toaStart, uint64_t toaEnd, double e): grade_(g),startTOA_(toaStart),endTOA_(toaEnd),totalE_(e){};
+   inline SpeciesHit(uint8_t g, uint64_t toaStart, uint64_t toaEnd, double e):
+   grade_(g),startTOA_(toaStart),endTOA_(toaEnd),totalE_(e){};
 };
 
 /**
  * @class Resource Guard
- * @brief a structure to protect and synchronize shared resources using a condition variable and mutex
+ * @brief a structure to protect and synchronize shared resources using a
+ * condition variable and mutex
  */
 class ResourceGuard {
     public:
@@ -36,7 +38,8 @@ class ResourceGuard {
 
 /**
  * @class SafeQueue
- * @brief templated class providing a mutex protected and condition_variable synchronized std::queue
+ * @brief templated class providing a mutex protected and condition_variable
+ * synchronized std::queue
  */
 template <typename T> class SafeQueue : public ResourceGuard{
     public:
@@ -45,7 +48,8 @@ template <typename T> class SafeQueue : public ResourceGuard{
 
 /**
  * @class SafeBuff
- * @brief templated class providing a mutex protected and condition_variable synchronized raw array
+ * @brief templated class providing a mutex protected and
+ * condition_variable synchronized raw array
  */
 template <typename T> class SafeBuff : public ResourceGuard{
     public:
@@ -53,20 +57,26 @@ template <typename T> class SafeBuff : public ResourceGuard{
         uint64_t numElements_ = 0;
         
         /**
-         * @fn inline uint64_t addElements(size_t newElCount, const T* newBuf, size_t& discarded)
+         * @fn inline uint64_t addElements(size_t newElCount, const T* newBuf,
+         * size_t& discarded)
          * @brief add elements to buffer
          * 
          * @param[in] newElCount count of elements to be added
          * @param[in] newBuf buffer containing newElCount elements to be added
-         * @param[out] discarded 0 if no overflow, number of elements discarded if we overflowed
+         * @param[out] discarded 0 if no overflow, number of elements discarded
+         * if we overflowed
          * 
-         * @return returns the total number of elements contained in this buffer after the addition
+         * @return returns the total number of elements contained in this
+         * buffer after the addition
          * 
          * @note function prevents overflow and issues warning
          * @note you MUST ACQUIRE THE MUTEX before calling this function
          */
-        inline uint64_t addElements(const size_t newElCount, const T* newBuf, size_t& discarded)
-        {
+        inline uint64_t addElements(
+            const size_t newElCount,
+            const T* newBuf,
+            size_t& discarded
+        ){
             size_t discardedElCount = 0;
             size_t allEl = this->numElements_ + newElCount;
             size_t elToAddCount = newElCount;
@@ -76,7 +86,11 @@ template <typename T> class SafeBuff : public ResourceGuard{
                 elToAddCount -= discardedElCount;               
             }
 
-            std::memcpy(this->buf_ + this->numElements_, newBuf, elToAddCount*sizeof(T));
+            std::memcpy(
+                this->buf_ + this->numElements_,
+                newBuf,
+                elToAddCount*sizeof(T)
+            );
             this->numElements_ += elToAddCount;
             discarded = discardedElCount; 
             return this->numElements_;
@@ -84,7 +98,8 @@ template <typename T> class SafeBuff : public ResourceGuard{
 
         /**
          * @fn inline size_t copyClear(T* copyBuf, size_t maxCopyBufElements)
-         * @brief copies elements from this buffer to another, clearing the elements from this buffer
+         * @brief copies elements from this buffer to another,
+         * clearing the elements from this buffer
          * 
          * @param[out] copyBuf buffer to copy elements into
          * @param[in] maxCopyBufElements max number of elements to copy
@@ -96,7 +111,8 @@ template <typename T> class SafeBuff : public ResourceGuard{
          */
         inline size_t copyClear(T* copyBuf, size_t maxCopyBufElements)
         {
-            // max items we can copy is minimum of (number of elements in this->buf) and (max space in copyBuf)
+            // max items we can copy is minimum of
+            //(number of elements in this->buf) and (max space in copyBuf)
             bool reorgRequired = true; 
             size_t maxElToCopy = maxCopyBufElements;
             if (this->numElements_ < maxElToCopy)
@@ -109,7 +125,11 @@ template <typename T> class SafeBuff : public ResourceGuard{
             if (reorgRequired)
             {
                 size_t uncopiedElements = (this->numElements_ - maxElToCopy);
-                std::memcpy(this->buf_,this->buf_+maxElToCopy,uncopiedElements * sizeof(T));
+                std::memcpy(
+                    this->buf_,
+                    this->buf_+maxElToCopy,
+                    uncopiedElements * sizeof(T)
+                );
                 this->numElements_ = uncopiedElements;
             }
             else
@@ -141,7 +161,8 @@ template <typename T> class SafeBuff : public ResourceGuard{
 
 /**
  * @fn inline void safe_finish(std::jthread& t, std::shared_ptr<SafeSomething> ss)
- * @brief gracefully join thread that waits on a mutex and condition variable protected resource
+ * @brief gracefully join thread that waits on a mutex and condition
+ * variable protected resource
  * 
  * @param t thread to join
  * @param guard resource guard for the shared resource t waits on

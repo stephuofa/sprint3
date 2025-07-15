@@ -10,7 +10,8 @@ bool extern debugPrints;
 
 // --------- \ Hardpix Settings / -------------------------------------------------------
 
-//! @brief type of acquisition, dictates what kind of pixel (raw hit) data is returned by lib_katherine  
+//! @brief type of acquisition, dictates what kind of pixel (raw hit) data is
+// returned by lib_katherine  
 using mode = katherine::acq::toa_tot;
 //! @brief IP address of readout device in hardpix
 const std::string HP_ADDRESS = "192.168.1.157";
@@ -27,7 +28,7 @@ constexpr uint32_t CHIP_AREA = CHIP_WIDTH * CHIP_HEIGHT;
 // --------- / Hardpix Settings \ -------------------------------------------------------
 
 
-// -------- \ Buffering Settings / -----------------------------------------------------
+// -------- \ Buffering Settings / ------------------------------------------------------
 
 //! @brief how many raw hits in buffer before we notify the raw hit writter
 constexpr size_t RAW_HIT_NOTIF_INC = 1000;
@@ -41,6 +42,6 @@ constexpr size_t MAX_RAW_FILE_LINES = 33554432; // ~5GB
 constexpr size_t MAX_SPECIES_FILE_LINES = 33554432; // ~5GB
 constexpr size_t MAX_BURST_FILE_LINES = 33554432; // ~5GB
 
-// -------- / Buffering Settings \ -----------------------------------------------------
+// -------- / Buffering Settings \ ------------------------------------------------------
 
 
