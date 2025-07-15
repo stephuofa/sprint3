@@ -74,7 +74,7 @@ template <typename T> class SafeBuff : public ResourceGuard{
                 discardedElCount = allEl - MAX_BUFF_EL;
                 elToAddCount -= discardedElCount;
 
-                // TODO - log overflow
+                //!@todo - log overflow instead of printing
                 if (debugPrints){ printf("buff overflow, discarding %zu elements\n",discardedElCount);}
                 printf("buff overflow, discarding %zu elements\n",discardedElCount);
             }

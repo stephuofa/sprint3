@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 
+//! @brief lookup of grade using grid sum
 std::unordered_map<uint8_t,uint8_t> gradeLookup =
 {
     {0,0},
@@ -27,6 +28,7 @@ std::unordered_map<uint8_t,uint8_t> gradeLookup =
     {18,6}, {22,6}, {50,6}, {54,6}, {80,6},{81,6},{208,6},{209,6},
 };
 
+//! @brief grid values for x-ray grating algorithm
 uint8_t gridValue[3][3] =
     {
         {32, 64, 128},
@@ -38,15 +40,15 @@ DataProcessor::DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std
 rawHitsBuff(rhq),speciesHitsQ(shq){}
 
 void DataProcessor::launch(){
-    dpThread =  std::jthread([&](std::stop_token stoken){this->processRawHits(stoken);});
+    dpThread =  std::jthread([&](std::stop_token stoken){this->processingLoop(stoken);});
 }
 
 DataProcessor::~DataProcessor(){
     safe_finish(dpThread,rawHitsBuff);
 }
 
-
-const uint8_t outlier = 7;
+//! @brief grade number assigned to clusters that don't have a valid grade
+constexpr uint8_t outlier = 7;
 uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd, mode::pixel_type* buf)
 {
     // too many hits to be an x-ray
@@ -87,7 +89,6 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
         auto clustTOAMax = clustTOAStart + 5;
         double maxEnergy = getEnergy(workBuf[0]);
         double totEnergy = maxEnergy;
-
 
         for(size_t  i = 1; i < workBufElements; i++)
         {
@@ -134,7 +135,7 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
     speciesHitsQ->cv_.notify_one();
 }
 
-void DataProcessor::processRawHits(std::stop_token stopToken){
+void DataProcessor::processingLoop(std::stop_token stopToken){
     mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
     size_t workBufElements = 0;
 
@@ -175,13 +176,10 @@ catch(const std::exception & e)
     }
 }
 
-// TODO extract to better location
-static constexpr uint16_t chipWidth = 256;
-static constexpr uint16_t chipHeight = 256;
-static constexpr uint32_t chipArea = chipWidth * chipHeight;
+
 double DataProcessor::getEnergy(const mode::pixel_type& px)
 {
-    size_t pixel_idx = chipWidth*px.coord.y + px.coord.x; 
+    size_t pixel_idx = CHIP_WIDTH*px.coord.y + px.coord.x; 
     uint16_t tot = px.tot;
     const CalibConstants& lookup{ lookupMatrix[pixel_idx] };
     const double k = lookup.bat - tot;
@@ -223,16 +221,15 @@ bool loadConstants(std::vector<double>& dst, const std::string& path, size_t exp
 
 bool DataProcessor::loadEnergyCalib(const std::string& calibFolderPath)
 {
-    // TODO: if we fail, use reasonable values
+    //! @todo if we fail, use reasonable values
     std::vector<double> a,b,c,t;
-    size_t n = chipArea;
-    if (!loadConstants(a,"core/calib/a.txt",n)){return false;}
-    if (!loadConstants(b,"core/calib/b.txt",n)){return false;}
-    if (!loadConstants(c,"core/calib/c.txt",n)){return false;}
-    if (!loadConstants(t,"core/calib/t.txt",n)){return false;}
+    if (!loadConstants(a, calibFolderPath + "/a.txt",CHIP_AREA)){return false;}
+    if (!loadConstants(b, calibFolderPath + "/b.txt",CHIP_AREA)){return false;}
+    if (!loadConstants(c, calibFolderPath + "/c.txt",CHIP_AREA)){return false;}
+    if (!loadConstants(t, calibFolderPath + "/t.txt",CHIP_AREA)){return false;}
 
-    lookupMatrix.resize(n);
-    for (size_t i = 0; i < n; ++i)
+    lookupMatrix.resize(CHIP_AREA);
+    for (size_t i = 0; i < CHIP_AREA; ++i)
     {
         CalibConstants& value{ lookupMatrix[i] };
         value.bat = b[i] + a[i] * t[i];

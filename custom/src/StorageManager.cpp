@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-StorageManager::StorageManager(std::string rn,std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w):runNum(rn),speciesHitsQ(shq),rawHitsToWriteBuff(rh2w){}
+StorageManager::StorageManager(const std::string& rn,std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w):runNum(rn),speciesHitsQ(shq),rawHitsToWriteBuff(rh2w){}
 
 StorageManager::~StorageManager(){
     safe_finish(speciesThread,speciesHitsQ);
@@ -23,7 +23,7 @@ bool StorageManager::checkUpdateOutFile(
     size_t& lineCount,
     std::ofstream& outFile,
     const std::string& filename,
-    const std::string runNum,
+    const std::string& runNum,
     const std::string& storagePath,
     size_t& fileNo,
     const size_t softMaxLines){
@@ -46,6 +46,7 @@ bool StorageManager::checkUpdateOutFile(
     return true;
 }
 
+//! @todo - minimize code duplication for writing different kinds of hits to different files
 void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     try{
         

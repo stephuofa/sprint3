@@ -120,7 +120,9 @@ void AcqController::loadConfig(const size_t acqTimeSec){
     dacs.named.PLL_Vcntrl            = 128;
     config.set_dacs(std::move(dacs));
 
-    katherine::px_config px_config = katherine::load_bmc_file("core/chipconfig.bmc"); // TODO - add error catch wrapperer
+    //! @todo - add error catch wrapper for loading file
+    //! @todo - extract file path to settings file
+    katherine::px_config px_config = katherine::load_bmc_file("core/chipconfig.bmc");
     config.set_pixel_config(std::move(px_config));
 }
 
@@ -177,7 +179,7 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     }
 }
 
-// TODO - change this to an error code
+//! @todo - return an error code instead of a bool
 bool AcqController::runAcq(){
     if(!device.has_value()){
         return false;
@@ -199,7 +201,7 @@ bool AcqController::runAcq(){
 
     double duration = duration_cast<milliseconds>(toc - tic).count() / 1000.;
     std::cerr << std::endl;
-    // TODO - write this to logger instead
+    //! @todo - write this to logger instead
     std::cerr << "Acquisition completed:" << std::endl
                 << " - state: " << katherine::str_acq_state(acq.state()) << std::endl
                 << " - received " << acq.completed_frames() << " complete frames" << std::endl

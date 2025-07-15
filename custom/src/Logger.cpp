@@ -13,6 +13,6 @@ Logger::Logger(const std::string& filename):logFile_(std::ofstream(filename)){
 void Logger::log(LogLevel level, const std::string& msg){
     auto x = level; // get rid of ununsed warning for now
     x = x;
-    // TODO add timestamp and log level
+    //! @todo - add timestamp and log level
     logFile_ << msg << std::endl;
 }

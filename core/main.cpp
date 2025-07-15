@@ -150,7 +150,7 @@ int main (int argc, char* argv[]){
         DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
 
         printf("\nLoading energy calibration files...\n");
-        if (!dataProc.loadEnergyCalib("todo-use this path to retrieve calib files")){return EXIT_SUCCESS;}
+        if (!dataProc.loadEnergyCalib("core/calib")){return EXIT_FAILURE;}
 
         // Connect and configure hardpix
         printf("\nConecting to hardpix...\n");
@@ -161,7 +161,7 @@ int main (int argc, char* argv[]){
         acqCtrl.loadConfig(acqTime);
         
         // Acquire
-        // TODO we need to finalize what condition causes us to stop acquiring
+        //! @todo we need to finalize what condition causes us to stop acquiring
         printf("\nLaunching threads...\n");
         storageMngr.genHeader(time(NULL),acqCtrl.getConfig());
         storageMngr.launch();
@@ -171,7 +171,7 @@ int main (int argc, char* argv[]){
         printf("\nLaunching acquisition...");
         acqCtrl.runAcq();
 
-        // Note: destructors handle cleanup
+        // destructors handle cleanup
     }
     catch(const std::exception & e)
     {
