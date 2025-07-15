@@ -40,7 +40,7 @@ class Logger final{
         //! @brief file handle for logfile
         std::ofstream logFile_;
 
-        //! @brief mutex to prevent garbeled output if multiple threads are tyring to write
+        //! @brief prevent garbeled output if multiple threads are tyring to write
         std::mutex mtx_;
 
         /**

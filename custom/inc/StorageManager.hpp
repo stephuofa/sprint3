@@ -17,7 +17,8 @@
 class StorageManager final {
 
     private:
-        //! @brief string describing the run number of the software (e.g. how many times we've run the application)
+        //! @brief string describing the run number of the software
+        // (e.g. how many times we've run the application)
         std::string runNum;
 
         //! @todo - extract to settings file
@@ -39,7 +40,8 @@ class StorageManager final {
         //! @brief thread for receiving raw hits and writting them to file
         std::jthread rawThread;
 
-        //! @brief contains file header for output file for an aquisition, see genHeader function
+        //! @brief contains file header for output file for an aquisition,
+        // see genHeader function
         std::stringstream header;
 
         /**
@@ -56,8 +58,8 @@ class StorageManager final {
          * @param[in] softMaxLines maximum nuber of lines
          * 
          * @note softMaxLines represents a soft max on number of lines not an absolute.
-         * in a write operation, we may exceed this number of lines, but a new file will be created
-         * before the next write operation
+         * in a write operation, we may exceed this number of lines, but a new
+         * file will be created before the next write operation
          */
         bool checkUpdateOutFile(
             size_t& lineCount,
@@ -70,7 +72,8 @@ class StorageManager final {
 
     public:
         /**
-         * @fn StorageManager(std::string runNum, std::shared_ptr<SafeQueue<SpeciesHit>>, std::shared_ptr<SafeBuff<mode::pixel_type>>)
+         * @fn StorageManager(std::string runNum, std::shared_ptr<SafeQueue<SpeciesHit>>,
+         * std::shared_ptr<SafeBuff<mode::pixel_type>>,std::shared_ptr<Logger> log)
          * @brief constructor for StorageManager
          * 
          * @param[in] runNum string describing run number (program run number)
@@ -78,7 +81,8 @@ class StorageManager final {
          * @param rh2w raw hit to write queue
          * @param log logger
          * 
-         * @note after construction you must spawn the threads that write to file manually using launch
+         * @note after construction you must spawn the threads that write to file
+         * manually using launch
          */
         StorageManager(
             const std::string& runNum,

@@ -46,7 +46,8 @@ class DataProcessor final{
         std::jthread dpThread;
 
         /**
-         * @fn DataProcessor::loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount)
+         * @fn DataProcessor::loadConstants(std::vector<double>& dst,
+         * const std::string& path, size_t expectedCount)
          * @brief loads calibration constants from file into a vector
          * 
          * @param[out] dst vector to load constants into
@@ -55,18 +56,28 @@ class DataProcessor final{
          * 
          * @return true if load from file successful, else false
          */
-        bool loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount);
+        bool loadConstants(
+            std::vector<double>& dst,
+            const std::string& path,
+            size_t expectedCount
+        );
 
     public:
         /**
-         * @fn DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>>,std::shared_ptr<SafeQueue<SpeciesHit>>)
-         * @brief constructor for DataProcessor, launch must be called to start processing thread
+         * @fn DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
+         * std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<Logger> log)
+         * @brief constructor for DataProcessor,
+         * launch must be called to start processing thread
          * 
          * @param rhq raw hits queue to read from
          * @param shq species hits queue to write to
          * @param log logger
          */
-        DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq, std::shared_ptr<SafeQueue<SpeciesHit>> shq,std::shared_ptr<Logger> log);
+        DataProcessor(
+            std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
+            std::shared_ptr<SafeQueue<SpeciesHit>> shq,
+            std::shared_ptr<Logger> log
+        );
         
         /**
          * @fn ~DataProcessor()

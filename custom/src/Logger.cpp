@@ -14,7 +14,8 @@ Logger::Logger(const std::string& filename):logFile_(std::ofstream(filename)){
 
 void Logger::log(LogLevel level, const std::string& msg){
     std::unique_lock lk(mtx_);
-    logFile_ << time(NULL) << " " << getLogLevelMsg(level) << " \"" << msg << "\"" << std::endl;
+    logFile_ << time(NULL) << " " << getLogLevelMsg(level) <<
+         " \"" << msg << "\"" << std::endl;
     logFile_.flush();
 }
 

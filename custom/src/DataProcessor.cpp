@@ -36,11 +36,16 @@ uint8_t gridValue[3][3] =
         {1 ,  2,   4},
     };
 
-DataProcessor::DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeQueue<SpeciesHit>> shq,std::shared_ptr<Logger> log):
-rawHitsBuff(rhq),speciesHitsQ(shq),logger(log){}
+DataProcessor::DataProcessor(
+    std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
+    std::shared_ptr<SafeQueue<SpeciesHit>> shq,
+    std::shared_ptr<Logger> log
+): rawHitsBuff(rhq),speciesHitsQ(shq),logger(log){}
 
 void DataProcessor::launch(){
-    dpThread =  std::jthread([&](std::stop_token stoken){this->processingLoop(stoken);});
+    dpThread =  std::jthread([&](std::stop_token stoken){
+        this->processingLoop(stoken);
+    });
 }
 
 DataProcessor::~DataProcessor(){
@@ -49,8 +54,12 @@ DataProcessor::~DataProcessor(){
 
 //! @brief grade number assigned to clusters that don't have a valid grade
 constexpr uint8_t outlier = 7;
-uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd, mode::pixel_type* buf)
-{
+uint8_t getClusterGrade(
+    size_t startInd,
+    size_t endInd,
+    size_t maxEInd,
+    mode::pixel_type* buf
+){
     // too many hits to be an x-ray
     if (endInd - startInd + 1 > 9){return outlier;} 
 
@@ -63,7 +72,7 @@ uint8_t getClusterGrade(size_t startInd, size_t endInd, size_t maxEInd, mode::pi
         int yOffset = buf[curInd].coord.y - buf[maxEInd].coord.y;
         if (abs(yOffset > 1)) { return outlier; } // hit out of bounds
 
-        sum += gridValue[yOffset + 1][xOffset + 1]; // map from {-1, 0, 1} to {0, 1, 2} indice
+        sum += gridValue[yOffset + 1][xOffset + 1]; // remap indice
     }
 
     const auto itr = gradeLookup.find(sum);
@@ -76,7 +85,11 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
 {
     if(!workBufElements) { return; }
 
-    std::sort(workBuf,workBuf+workBufElements,[](const mode::pixel_type& a, const mode::pixel_type& b){ return a.toa < b.toa;});
+    std::sort(
+        workBuf,
+        workBuf+workBufElements,
+        [](const mode::pixel_type& a, const mode::pixel_type& b){ return a.toa < b.toa;}
+    );
         
     { // scope of lock on speciesHits
         std::unique_lock lk(speciesHitsQ->mtx_);
@@ -149,11 +162,11 @@ void DataProcessor::processingLoop(std::stop_token stopToken){
             { // scope of lock on rawHitsBuff
                 std::unique_lock lk(rawHitsBuff->mtx_);
                 if(!stopToken.stop_requested()){
-                    // we are in "normal" we should give up lock and wait to be notified
-                    rawHitsBuff->cv_.wait(lk); // ad predicate
+                    //! @todo -add predicate to handle spurious wake up
+                    rawHitsBuff->cv_.wait(lk); 
                 }
-                // we have acquire lock and can do processing
-                if(!rawHitsBuff->numElements_) { continue ;} // in case of spurious wake up
+                // we have acquired lock and can do processing
+                if(!rawHitsBuff->numElements_) { continue ;} 
                 workBufElements = rawHitsBuff->copyClear(workBuf,MAX_BUFF_EL);
             }
             doProcessing(workBuf,workBufElements);
@@ -172,7 +185,11 @@ void DataProcessor::processingLoop(std::stop_token stopToken){
     }
     catch(const std::exception & e) {
         //! @todo - should we relaunch thread/program on fatal error
-        logger->log(LogLevel::LL_FATAL,std::format("caught exception in DataProcessor-thread: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
+        logger->log(
+            LogLevel::LL_FATAL,
+            std::format("caught exception in DataProcessor-thread: type-[{}] msg-[{}]",
+                typeid(e).name(),e.what())
+        );
     }
 }
 
@@ -186,20 +203,26 @@ double DataProcessor::getEnergy(const mode::pixel_type& px)
     double energy = lookup.ita * (tot + lookup.atb + std::sqrt(k * k + lookup.fac));
 
     if (energy > 918) {
-    // Distortion level reached - slightly depends on values used energy response completely
-    // breaks down above 1800 keV.
-    energy = energy - 0.888 * (energy - 918);
+        // Distortion level reached - slightly depends on values used energy response
+        // completely breaks down above 1800 keV.
+        energy = energy - 0.888 * (energy - 918);
     }
 
     return energy;
 }
 
 // true if successful, false if load failed for any reason
-bool DataProcessor::loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount)
+bool DataProcessor::loadConstants(
+    std::vector<double>& dst,
+    const std::string& path,
+    size_t expectedCount)
 {
     std::ifstream file(path);
     if(!file.is_open()){
-        logger->log(LogLevel::LL_FATAL, std::format("failed to open calibration file {}",path));
+        logger->log(
+            LogLevel::LL_FATAL,
+            std::format("failed to open calibration file {}",path)
+        );
         return false;
     }
 
@@ -217,7 +240,11 @@ bool DataProcessor::loadConstants(std::vector<double>& dst, const std::string& p
     file.close();
 
     if(expectedCount != dst.size()){
-        logger->log(LogLevel::LL_ERROR, std::format("unexpect number of contants (expected:{}, actual:{}) in calibarion file {}",expectedCount,dst.size(),path));
+        logger->log(
+            LogLevel::LL_ERROR,
+            std::format("unexpect number of contants (expected:{}, actual:{})\
+ in calibarion file {}",expectedCount,dst.size(),path)
+        );
         return false;
     }
 
