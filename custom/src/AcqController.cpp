@@ -4,79 +4,80 @@
 #include <iostream>
 #include "globals.h"
 
-AcqController::AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w):
- rawHitsBuff(rhq), rawHitsToWriteBuff(rh2w) {}
+AcqController::AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w, std::shared_ptr<Logger> log):
+ rawHitsBuff(rhq), rawHitsToWriteBuff(rh2w), logger(log) {}
 
 
 bool AcqController::testConnection(){
     std::string id;
 
     if(!device){
-        printf("no dev \n");
+        logger->log(LogLevel::LL_ERROR, "no device");
         return false;
     }
 
-    try
-    {
+    try{
         id = device->chip_id();
-    } catch(const std::exception& e)
-    {
-        printf("error while fetching chip id: ");
-        std::cout << e.what() << std::endl;
+    } catch(const std::exception& e){
+        logger->log(LogLevel::LL_ERROR, std::format( "exception while fetching chip id: {}",e.what()));
         return false;
     }
-    std::cout << "expected ID: " << CHIP_ID << " recieved ID: " << id << std::endl;
-    return id == CHIP_ID;
+
+    if (id == CHIP_ID){
+        logger->log(LogLevel::LL_INFO,std::format("verified connection with chip id {}",id));
+        return true;
+    } else{
+        logger->log(LogLevel::LL_ERROR,std::format("bad chip ID (expected: {}, actual:{})",CHIP_ID,id));
+        return false;
+    }
 }
 
 bool AcqController::connectDevice(){
 
+    //! @todo extract connection attempt magic numbers to settings file
     bool devConnected = false;
     for(size_t i = 0; i < 5 ; i++){
-        printf("creating sockets attempt %zu\n",i);
-
         try
         {
             device.emplace(HP_ADDRESS);
-            printf("created sockets\n");
             devConnected = true;
             break;
         } 
         catch (const std::exception& e)
         {
-            printf("failed to create sockets\n");
-            std::cerr << e.what() << '\n';
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            logger->log(LogLevel::LL_ERROR, std::format("failed to create sockets - {}",e.what()));
+            std::this_thread::sleep_for(std::chrono::seconds(3));
         }
     }
 
     if(!devConnected)
     {
+        logger->log(LogLevel::LL_FATAL, "abandoned socket creation");
         return false;
     }
 
     devConnected = false;
     for(size_t i = 0; i < 5; i++){
-        printf("test connection attempt %zu...",i);
-
         try
         {
             if(testConnection())
             {
-                printf("Connection Successful\n");
                 devConnected = true;
                 break;
             }
-            printf("connection test failed\n");
         }
         catch(const std::exception& e)
         {
-            printf("error while validating connection\n");
-            std::cerr << e.what() << '\n';
+            logger->log(LogLevel::LL_ERROR, std::format("exception thrown during connection test: {}",e.what()));
         }
-        std::this_thread::sleep_for(std::chrono::seconds(2));
+        std::this_thread::sleep_for(std::chrono::seconds(3));
     }
 
+    if(devConnected){
+        logger->log(LogLevel::LL_INFO, "device connection succesful");
+    } else{
+        logger->log(LogLevel::LL_FATAL, "abandoned device connection");
+    }
     return devConnected;
 }
 
@@ -131,7 +132,7 @@ AcqController::frame_started(int frame_idx)
 {
     nHits = 0;
 
-    std::cerr << "Started Frame #" << frame_idx << std::endl;
+    logger->log(LogLevel::LL_INFO,"acq frame started");
 }
 
 void
@@ -139,21 +140,22 @@ AcqController::frame_ended(int frame_idx, bool completed, const katherine_frame_
 {
     const double recv_perc = 100. * info.received_pixels / info.sent_pixels;
 
-    std::cerr << std::endl;
-    std::cerr << "Ended Frame #" << frame_idx << std::endl;
-    std::cerr << " - tpx3->katherine lost " << info.lost_pixels << " pixels" << std::endl
-                << " - katherine->pc sent " << info.sent_pixels << " pixels" << std::endl
-                << " - katherine->pc received " << info.received_pixels << " pixels (" << recv_perc << " %)" << std::endl
-                << " - state: " << (completed ? "completed" : "not completed") << std::endl
-                << " - start time: " << info.start_time.d << std::endl
-                << " - end time: " << info.end_time.d << std::endl;
-    std::cerr << "Ended Frame " << std::endl;
+    std::stringstream ss;
+    ss << "Ended Frame #" << frame_idx
+            << " [tpx3->katherine lost " << info.lost_pixels << " pixels" << "]"
+            << " [katherine->pc sent " << info.sent_pixels << " pixels" << "]"
+            << " [katherine->pc received " << info.received_pixels << " pixels (" << recv_perc << " %)" << "]"
+            << " [state: " << (completed ? "completed" : "not completed") << "]"
+            << " [start time: " << info.start_time.d << "]"
+            << " [end time: " << info.end_time.d << "]";
+    logger->log(LogLevel::LL_INFO, ss.str());
 }
 
 void
 AcqController::pixels_received(const mode::pixel_type *px, size_t count)
 {
     nHits += count;
+    size_t discarded;
     if (debugPrints){
         for(size_t i = 0; i < count; ++i)
         {
@@ -164,18 +166,24 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     
     {
         std::unique_lock lk(rawHitsBuff->mtx_);
-        rawHitsBuff->addElements(count,px);        
+        rawHitsBuff->addElements(count,px,discarded);        
     }
     rawHitsBuff->cv_.notify_one();
+    if(discarded){
+        logger->log(LogLevel::LL_WARNING, std::format("buffer overflow in AcqController::pixels_received - forced to discard %zu elements from rawHitsBuff",discarded));
+    }
 
     bool notifyRaw = false;
     {
         std::unique_lock lk(rawHitsToWriteBuff->mtx_);
-        uint64_t total = rawHitsToWriteBuff->addElements(count,px);
+        uint64_t total = rawHitsToWriteBuff->addElements(count,px,discarded);
         notifyRaw = (total > RAW_HIT_NOTIF_INC);
     }
     if(notifyRaw){
         rawHitsToWriteBuff->cv_.notify_one();
+    }
+    if(discarded){
+        logger->log(LogLevel::LL_WARNING, std::format("buffer overflow in AcqController::pixels_received - forced to discard %zu elements from rawHitsToWriteBuff",discarded));
     }
 }
 
@@ -200,15 +208,15 @@ bool AcqController::runAcq(){
     auto toc = steady_clock::now();
 
     double duration = duration_cast<milliseconds>(toc - tic).count() / 1000.;
-    std::cerr << std::endl;
-    //! @todo - write this to logger instead
-    std::cerr << "Acquisition completed:" << std::endl
-                << " - state: " << katherine::str_acq_state(acq.state()) << std::endl
-                << " - received " << acq.completed_frames() << " complete frames" << std::endl
-                << " - dropped " << acq.dropped_measurement_data() << " measurement data items" << std::endl
-                << " - total hits: " << nHits << std::endl
-                << " - total duration: " << duration << " s" << std::endl
-                << " - throughput: " << (nHits / duration) << " hits/s" << std::endl;
+    std::stringstream ss;
+    ss << "Acquisition completed:" 
+                << " [state: " << katherine::str_acq_state(acq.state()) << "]"
+                << " [received " << acq.completed_frames() << " complete frames" << "]"
+                << " [dropped " << acq.dropped_measurement_data() << " measurement data items" << "]"
+                << " [total hits: " << nHits << "]"
+                << " [total duration: " << duration << " s" << "]"
+                << " [throughput: " << (nHits / duration) << " hits/s" << "]";
+    logger->log(LogLevel::LL_INFO,ss.str());
     return true;
 }
 

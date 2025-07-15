@@ -36,8 +36,8 @@ uint8_t gridValue[3][3] =
         {1 ,  2,   4},
     };
 
-DataProcessor::DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeQueue<SpeciesHit>> shq):
-rawHitsBuff(rhq),speciesHitsQ(shq){}
+DataProcessor::DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeQueue<SpeciesHit>> shq,std::shared_ptr<Logger> log):
+rawHitsBuff(rhq),speciesHitsQ(shq),logger(log){}
 
 void DataProcessor::launch(){
     dpThread =  std::jthread([&](std::stop_token stoken){this->processingLoop(stoken);});
@@ -136,43 +136,43 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
 }
 
 void DataProcessor::processingLoop(std::stop_token stopToken){
-    mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
-    size_t workBufElements = 0;
-
     try{
-    printf("Data Processor thread launched\n");
-    // stop only when we've been requested to AND all the data has been processed
+        logger->log(LogLevel::LL_INFO,"DataProcessor thread launched");
 
-    while(!stopToken.stop_requested()){
+        mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
+        size_t workBufElements = 0;
 
-        { // scope of lock on rawHitsBuff
-            std::unique_lock lk(rawHitsBuff->mtx_);
-            if(!stopToken.stop_requested()){
-                // we are in "normal" we should give up lock and wait to be notified
-                rawHitsBuff->cv_.wait(lk); // ad predicate
+        // stop only when we've been requested to AND all the data has been processed
+
+        while(!stopToken.stop_requested()){
+
+            { // scope of lock on rawHitsBuff
+                std::unique_lock lk(rawHitsBuff->mtx_);
+                if(!stopToken.stop_requested()){
+                    // we are in "normal" we should give up lock and wait to be notified
+                    rawHitsBuff->cv_.wait(lk); // ad predicate
+                }
+                // we have acquire lock and can do processing
+                if(!rawHitsBuff->numElements_) { continue ;} // in case of spurious wake up
+                workBufElements = rawHitsBuff->copyClear(workBuf,MAX_BUFF_EL);
             }
-            // we have acquire lock and can do processing
-            if(!rawHitsBuff->numElements_) { continue ;} // in case of spurious wake up
+            doProcessing(workBuf,workBufElements);
+        }
+
+        // In case any data is left after we've been requested to terminate
+        { 
+            std::unique_lock lk(rawHitsBuff->mtx_);
             workBufElements = rawHitsBuff->copyClear(workBuf,MAX_BUFF_EL);
         }
         doProcessing(workBuf,workBufElements);
-    }
 
-    // In case any data is left after we've been requested to terminate
-    { 
-        std::unique_lock lk(rawHitsBuff->mtx_);
-        workBufElements = rawHitsBuff->copyClear(workBuf,MAX_BUFF_EL);
-    }
-    doProcessing(workBuf,workBufElements);
+        logger->log(LogLevel::LL_INFO,"DataProcessor thread terminated");
 
-    printf("Data Processor thread terminated\n");
-    delete[] workBuf;
-}
-catch(const std::exception & e)
-    {
-       std::cerr << "Caught exception in DP thread of type: " << typeid(e).name() 
-                  << " - Message: " << e.what() << std::endl;
-        std::cerr.flush();
+        delete[] workBuf;
+    }
+    catch(const std::exception & e) {
+        //! @todo - should we relaunch thread/program on fatal error
+        logger->log(LogLevel::LL_FATAL,std::format("caught exception in DataProcessor-thread: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
     }
 }
 
@@ -195,11 +195,11 @@ double DataProcessor::getEnergy(const mode::pixel_type& px)
 }
 
 // true if successful, false if load failed for any reason
-bool loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount)
+bool DataProcessor::loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount)
 {
     std::ifstream file(path);
     if(!file.is_open()){
-        std::cout << "failed to open file " << path << std::endl;
+        logger->log(LogLevel::LL_FATAL, std::format("failed to open calibration file {}",path));
         return false;
     }
 
@@ -216,7 +216,12 @@ bool loadConstants(std::vector<double>& dst, const std::string& path, size_t exp
 
     file.close();
 
-    return expectedCount == dst.size();
+    if(expectedCount != dst.size()){
+        logger->log(LogLevel::LL_ERROR, std::format("unexpect number of contants (expected:{}, actual:{}) in calibarion file {}",expectedCount,dst.size(),path));
+        return false;
+    }
+
+    return true;
 }
 
 bool DataProcessor::loadEnergyCalib(const std::string& calibFolderPath)

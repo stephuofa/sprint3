@@ -8,6 +8,7 @@
 #include <thread>
 #include <vector>
 #include "CustomDataTypes.hpp"
+#include "Logger.hpp"
 
 /**
  * @class DataProcessor
@@ -35,11 +36,26 @@ class DataProcessor final{
         //! @brief butter to write to, containing species hit (cluster) data
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ;
 
+        //! @brief logger writes log statments to file
+        std::shared_ptr<Logger> logger;
+
         //! @brief lookup calib constants based on x,y coords
         std::vector<CalibConstants> lookupMatrix;
 
         //! @brief thread to run the data processor
         std::jthread dpThread;
+
+        /**
+         * @fn DataProcessor::loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount)
+         * @brief loads calibration constants from file into a vector
+         * 
+         * @param[out] dst vector to load constants into
+         * @param[in] path path of calibration file
+         * @param[in] expectedCount experect amount of contants in file at path
+         * 
+         * @return true if load from file successful, else false
+         */
+        bool loadConstants(std::vector<double>& dst, const std::string& path, size_t expectedCount);
 
     public:
         /**
@@ -48,8 +64,9 @@ class DataProcessor final{
          * 
          * @param rhq raw hits queue to read from
          * @param shq species hits queue to write to
+         * @param log logger
          */
-        DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq, std::shared_ptr<SafeQueue<SpeciesHit>> shq);
+        DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq, std::shared_ptr<SafeQueue<SpeciesHit>> shq,std::shared_ptr<Logger> log);
         
         /**
          * @fn ~DataProcessor()

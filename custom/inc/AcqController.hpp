@@ -7,6 +7,7 @@
 
 #include <memory>
 
+#include "Logger.hpp"
 #include "CustomDataTypes.hpp"
 
 /**
@@ -27,6 +28,9 @@ class AcqController final{
 
         //! @brief buffer storing raw hits to be written to file
         std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff;
+
+        //! @brief logger writes log statments to file
+        std::shared_ptr<Logger> logger;
 
         //! @brief hardpix device
         std::optional<katherine::device> device;
@@ -65,10 +69,11 @@ class AcqController final{
          * @fn AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w)
          * @brief constructor for acq controller
          * 
-         * @param[in] rhq buffer of raw hits to write into, buffer gets sent for processing
-         * @param[in] rhw2 buffer of raw hits to write into, buffer get sent to write raw data to file
+         * @param rhq buffer of raw hits to write into, buffer gets sent for processing
+         * @param rhw2 buffer of raw hits to write into, buffer get sent to write raw data to file
+         * @param log logger 
          */
-        AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w);
+        AcqController(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w, std::shared_ptr<Logger> logger);
         
         /**
          * @fn loadConfig(size_t acqTimeSec);

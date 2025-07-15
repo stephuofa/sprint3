@@ -8,6 +8,7 @@
 #include <thread>
 #include <string>
 #include "CustomDataTypes.hpp"
+#include "Logger.hpp"
 
 /**
  * @class StorageManager
@@ -16,14 +17,29 @@
 class StorageManager final {
 
     private:
+        //! @brief string describing the run number of the software (e.g. how many times we've run the application)
         std::string runNum;
+
+        //! @todo - extract to settings file
         std::string rawPath = "output/data/raw/";
-        std::string speciesPath = "output/data/species/"; 
+        std::string speciesPath = "output/data/species/";
+        
+        //! @brief species hit buffer, species hits get written to file
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ;
+
+        //! @brief raw hit buffer, raw hits get written to file
         std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff;
+        
+        //! @brief logger writes log statments to file
+        std::shared_ptr<Logger> logger;
+
+        //! @brief thread for receiving species hits and writting them to file
         std::jthread speciesThread;
+
+        //! @brief thread for receiving raw hits and writting them to file
         std::jthread rawThread;
 
+        //! @brief contains file header for output file for an aquisition, see genHeader function
         std::stringstream header;
 
         /**
@@ -35,7 +51,6 @@ class StorageManager final {
          * @param[inout] lineCount number of lines written to outFile
          * @param[inout] outFile handle of current output file stream
          * @param[in] filename name describing outfile type e.g. "rawHits"
-         * @param[in] runNum string describing run number e.g. "42"
          * @param[in] storagePath path to folder new outfiles are created in
          * @param[inout] fileNo output file number
          * @param[in] softMaxLines maximum nuber of lines
@@ -48,7 +63,6 @@ class StorageManager final {
             size_t& lineCount,
             std::ofstream& outFile,
             const std::string& filename,
-            const std::string& runNum,
             const std::string& storagePath,
             size_t& fileNo,
             const size_t softMaxLines
@@ -62,13 +76,15 @@ class StorageManager final {
          * @param[in] runNum string describing run number (program run number)
          * @param shq species hit queue
          * @param rh2w raw hit to write queue
+         * @param log logger
          * 
          * @note after construction you must spawn the threads that write to file manually using launch
          */
         StorageManager(
             const std::string& runNum,
             std::shared_ptr<SafeQueue<SpeciesHit>> shq,
-            std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w
+            std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w,
+            std::shared_ptr<Logger> log
         );
 
         /**

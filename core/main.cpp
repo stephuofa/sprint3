@@ -22,7 +22,9 @@ static std::string PATH_TO_RUN_NUM_FILE = "core/run_num.txt";
 
 void checkCreateDir(std::string& string){
     try {
-        if(!std::filesystem::is_directory(std::filesystem::path(string))){std::filesystem::create_directory(string);}
+        if(!std::filesystem::is_directory(std::filesystem::path(string))){
+            std::filesystem::create_directory(string);
+        }
     }
     catch(const std::exception& e){
         printf("%s\n",e.what());
@@ -106,6 +108,7 @@ std::string updateRunNum(int runInt)
 
 bool debugPrints = false;
 int main (int argc, char* argv[]){
+    std::shared_ptr<Logger> logger;
     try
     {
         // parse command line args
@@ -138,24 +141,26 @@ int main (int argc, char* argv[]){
 
         // start logging
         std::string logFileName = "output/logs/log_run" + runNum + ".txt";
-        Logger logger(logFileName);
+        logger = std::make_shared<Logger>(logFileName);
 
-        // initialize core classes
+        // create data pipes
         std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
         std::shared_ptr<SafeBuff<mode::pixel_type>> rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
-        AcqController acqCtrl(rawHitsBuff,rawHitsToWriteBuff);
-        // the order of declaration of these classes is important, we want dataProc destructed before storageMng
-        StorageManager storageMngr(runNum,speciesHitsQ,rawHitsToWriteBuff);
-        DataProcessor dataProc(rawHitsBuff,speciesHitsQ);
 
+        // initialize core classes
+        AcqController acqCtrl(rawHitsBuff, rawHitsToWriteBuff, logger);
+        // the order of declaration of these classes is important, we want dataProc destructed before storageMng
+        StorageManager storageMngr(runNum, speciesHitsQ, rawHitsToWriteBuff, logger);
+        DataProcessor dataProc(rawHitsBuff, speciesHitsQ, logger);
+
+        //! @todo - extract path to settings file
         printf("\nLoading energy calibration files...\n");
         if (!dataProc.loadEnergyCalib("core/calib")){return EXIT_FAILURE;}
 
         // Connect and configure hardpix
         printf("\nConecting to hardpix...\n");
         if (!acqCtrl.connectDevice()){
-            printf("failed to connect to hardpix\n");
             return EXIT_FAILURE;
         }
         acqCtrl.loadConfig(acqTime);
@@ -175,10 +180,10 @@ int main (int argc, char* argv[]){
     }
     catch(const std::exception & e)
     {
-       std::cerr << "Caught exception of type: " << typeid(e).name() 
-                  << " - Message: " << e.what() << std::endl;
-        std::cerr.flush();
+        //! @todo - should we relaunch on fatal error, what if we just missed the end of acq frame and got a timeout error
+        logger->log(LogLevel::LL_FATAL,std::format("caught exception in main: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

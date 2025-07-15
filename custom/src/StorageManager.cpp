@@ -6,7 +6,8 @@
 #include <iostream>
 
 
-StorageManager::StorageManager(const std::string& rn,std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w):runNum(rn),speciesHitsQ(shq),rawHitsToWriteBuff(rh2w){}
+StorageManager::StorageManager(const std::string& rn,std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<SafeBuff<mode::pixel_type>> rh2w, std::shared_ptr<Logger> log):
+runNum(rn),speciesHitsQ(shq),rawHitsToWriteBuff(rh2w),logger(log){}
 
 StorageManager::~StorageManager(){
     safe_finish(speciesThread,speciesHitsQ);
@@ -23,10 +24,10 @@ bool StorageManager::checkUpdateOutFile(
     size_t& lineCount,
     std::ofstream& outFile,
     const std::string& filename,
-    const std::string& runNum,
     const std::string& storagePath,
     size_t& fileNo,
     const size_t softMaxLines){
+    std::string outFileName;
     if (lineCount > softMaxLines)
     {
         if(outFile.is_open())
@@ -34,13 +35,14 @@ bool StorageManager::checkUpdateOutFile(
             outFile.flush();
             outFile.close();
         }
-        std::string outFileName = filename + "_RN-" + runNum + "_FN-" + std::to_string(fileNo) + ".txt";
+        outFileName = filename + "_RN-" + runNum + "_FN-" + std::to_string(fileNo) + ".txt";
         outFile = std::ofstream(storagePath + outFileName);
         outFile << header.str();
         lineCount = 0;
         fileNo++;
     }
     if(!outFile.is_open()){
+        logger->log(LogLevel::LL_FATAL,std::format("cant create outputfile {}", outFileName));
         return false;
     }
     return true;
@@ -50,53 +52,50 @@ bool StorageManager::checkUpdateOutFile(
 void StorageManager::handleSpeciesHits(std::stop_token stopToken){
     try{
         
-    printf("smSpecies thread launched\n");
+        logger->log(LogLevel::LL_INFO,"StorageManager speciesThread launched");
 
-    size_t count = MAX_SPECIES_FILE_LINES + 1;
-    uint64_t fileNo = 0;
-    std::ofstream outFile;
-    while(!stopToken.stop_requested() || !speciesHitsQ->q_.empty())
-    {
-        if(!checkUpdateOutFile(count,outFile,"speciesHits",runNum,speciesPath,fileNo,MAX_SPECIES_FILE_LINES)){ 
-            printf("cannot open outfile\n");
-            return;
-        }
-
+        size_t count = MAX_SPECIES_FILE_LINES + 1;
+        uint64_t fileNo = 0;
+        std::ofstream outFile;
+        while(!stopToken.stop_requested() || !speciesHitsQ->q_.empty())
         {
-            std::unique_lock lk(speciesHitsQ->mtx_);
-            if(!stopToken.stop_requested())
-            {
-                speciesHitsQ->cv_.wait(lk, [&]{
-                return stopToken.stop_requested() || speciesHitsQ->q_.size() > 0;});
+            if(!checkUpdateOutFile(count,outFile,"speciesHits",speciesPath,fileNo,MAX_SPECIES_FILE_LINES)){ 
+                return;
             }
-        
-            while(!speciesHitsQ->q_.empty()){
+
+            {
+                std::unique_lock lk(speciesHitsQ->mtx_);
+                if(!stopToken.stop_requested())
+                {
+                    speciesHitsQ->cv_.wait(lk, [&]{
+                    return stopToken.stop_requested() || speciesHitsQ->q_.size() > 0;});
+                }
+            
+                while(!speciesHitsQ->q_.empty()){
+                    const auto curEl = speciesHitsQ->q_.front();
+                    outFile << (int) curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
+                    speciesHitsQ->q_.pop();
+                }
+            }
+        }
+            
+        {   // Do any final processsing
+            std::unique_lock lk(speciesHitsQ->mtx_);  
+            while(!speciesHitsQ->q_.empty())
+            {
                 const auto curEl = speciesHitsQ->q_.front();
-                outFile << (int) curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
+                outFile << curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
                 speciesHitsQ->q_.pop();
             }
         }
-    }
-        
-    {   // Do any final processsing
-        std::unique_lock lk(speciesHitsQ->mtx_);  
-        while(!speciesHitsQ->q_.empty())
-        {
-            const auto curEl = speciesHitsQ->q_.front();
-            outFile << curEl.grade_ << " " << curEl.startTOA_ << " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
-            speciesHitsQ->q_.pop();
-        }
-    }
 
-    outFile.flush();
-    outFile.close();
-    printf("smSpecies thread terminated\n");
+        outFile.flush();
+        outFile.close();
+        logger->log(LogLevel::LL_INFO,"StorageManager speciesThread terminated");
     }
-catch(const std::exception & e)
-    {
-       std::cerr << "Caught exception in SM-species of type: " << typeid(e).name() 
-                  << " - Message: " << e.what() << std::endl;
-        std::cerr.flush();
+    catch(const std::exception & e){
+        //! @todo - should we relaunch thread/program on fatal error
+        logger->log(LogLevel::LL_FATAL,std::format("caught exception in StorageManager-speciesThread: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
     }
 
 }
@@ -105,17 +104,18 @@ catch(const std::exception & e)
 void StorageManager::handleRawHits(std::stop_token stopToken){
     try
     {
+        logger->log(LogLevel::LL_INFO,"StorageManager rawThread launched");
+
         mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
         size_t workBufElements = 0;
-        printf("smRaw thread launched\n");
 
         uint64_t count = MAX_RAW_FILE_LINES + 1;
         uint64_t fileNo = 0;
         std::ofstream outFile;
         while(!stopToken.stop_requested())
         {
-            if(!checkUpdateOutFile(count,outFile,"rawHits",runNum,rawPath,fileNo,MAX_RAW_FILE_LINES)){ 
-                printf("cannot open outfile\n");
+            if(!checkUpdateOutFile(count,outFile,"rawHits",rawPath,fileNo,MAX_RAW_FILE_LINES)){
+                //! @todo what action should we take if we can't open files 
                 return;
             }
             
@@ -140,13 +140,13 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             }
         outFile.flush();
         outFile.close();
-        printf("smRaw thread terminated\n");
+        logger->log(LogLevel::LL_INFO,"StorageManager rawThread terminated");
+
     }
     catch(const std::exception & e)
     {
-       std::cerr << "Caught exception in SM-raw of type: " << typeid(e).name() 
-                  << " - Message: " << e.what() << std::endl;
-        std::cerr.flush();
+        //! @todo - should we relaunch thread/program on fatal error
+        logger->log(LogLevel::LL_FATAL,std::format("caught exception in StorageManager-rawThread: type-[{}] msg-[{}]",typeid(e).name(),e.what()));
     }
 }
 

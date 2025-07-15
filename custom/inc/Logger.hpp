@@ -6,6 +6,7 @@
 #pragma once
 #include <fstream>
 #include <mutex>
+#include <unordered_map>
 
 /**
  * @enum LogLevel
@@ -19,16 +20,36 @@ enum class LogLevel {
     LL_FATAL,
 };
 
+const std::unordered_map<LogLevel, const std::string> logLevelMsgMap = {
+    {LogLevel::LL_DEBUG,    "[DEBUG]"   },
+    {LogLevel::LL_INFO,     "[INFO]"    },
+    {LogLevel::LL_WARNING,  "[WARNING]" },
+    {LogLevel::LL_ERROR,    "[ERROR]"   },
+    {LogLevel::LL_FATAL,    "[FATAL]"   },
+};
+
 /**
  * @class Logger
  * @brief writes log messages to log file
  * 
- * @note UNFINISHED
+ * @note logger is mutex protected
+ * 
  */
 class Logger final{
     private:
         //! @brief file handle for logfile
         std::ofstream logFile_;
+
+        //! @brief mutex to prevent garbeled output if multiple threads are tyring to write
+        std::mutex mtx_;
+
+        /**
+         * @fn getLogLevelMsg(const LogLevel levelEnum)
+         * @brief gets a string descriptor of log level type
+         * 
+         * @return "[<TYPENAME>]" or "[UNKNOWN]"
+         */
+        std::string getLogLevelMsg(const LogLevel levelEnum);
 
     public:
         /**
@@ -42,9 +63,11 @@ class Logger final{
         /**
          * @fn void log(LogLevel level, const std::string& msg)
          * @brief writes an entry to the log file
-         * 
+         *           
          * @param[in] level type of message
          * @param[in] msg message to write
+         * 
+         * @note mutex protected
          */
         void log(const LogLevel level, const std::string& msg);
 };

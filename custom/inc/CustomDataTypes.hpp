@@ -53,18 +53,19 @@ template <typename T> class SafeBuff : public ResourceGuard{
         uint64_t numElements_ = 0;
         
         /**
-         * @fn inline uint64_t addElements(size_t newElCount, const T* newBuf)
+         * @fn inline uint64_t addElements(size_t newElCount, const T* newBuf, size_t& discarded)
          * @brief add elements to buffer
          * 
          * @param[in] newElCount count of elements to be added
          * @param[in] newBuf buffer containing newElCount elements to be added
+         * @param[out] discarded 0 if no overflow, number of elements discarded if we overflowed
          * 
          * @return returns the total number of elements contained in this buffer after the addition
          * 
          * @note function prevents overflow and issues warning
          * @note you MUST ACQUIRE THE MUTEX before calling this function
          */
-        inline uint64_t addElements(const size_t newElCount, const T* newBuf)
+        inline uint64_t addElements(const size_t newElCount, const T* newBuf, size_t& discarded)
         {
             size_t discardedElCount = 0;
             size_t allEl = this->numElements_ + newElCount;
@@ -72,15 +73,12 @@ template <typename T> class SafeBuff : public ResourceGuard{
             if (MAX_BUFF_EL < allEl)
             {
                 discardedElCount = allEl - MAX_BUFF_EL;
-                elToAddCount -= discardedElCount;
-
-                //!@todo - log overflow instead of printing
-                if (debugPrints){ printf("buff overflow, discarding %zu elements\n",discardedElCount);}
-                printf("buff overflow, discarding %zu elements\n",discardedElCount);
+                elToAddCount -= discardedElCount;               
             }
 
             std::memcpy(this->buf_ + this->numElements_, newBuf, elToAddCount*sizeof(T));
             this->numElements_ += elToAddCount;
+            discarded = discardedElCount; 
             return this->numElements_;
         }
 
