@@ -10,15 +10,17 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-  safebuff_test
-  ./unit/safebuff_test.cc
+  all_tests
+  ./unit/all_tests.cc
+  ./unit/safebuff_tests.cc
+  ./unit/dataprocessor_tests.cc
 )
 target_link_libraries(
-  safebuff_test
+  all_tests
   dat_lib
   GTest::gtest_main
 )
-target_include_directories(safebuff_test PRIVATE ${CMAKE_SOURCE_DIR}/custom/inc)
+target_include_directories(all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 
 include(GoogleTest)
-gtest_discover_tests(safebuff_test)
+gtest_discover_tests(all_tests)

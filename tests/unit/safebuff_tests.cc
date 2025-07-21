@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include "CustomDataTypes.hpp"
 
-// -------- Test Insert ------------------------------------------------------------------
 TEST(SafeBuffTest, addElementsGeneral) {
   SafeBuff<int> myBuf;
   int fakeData []= {1,2,3};
@@ -78,10 +77,6 @@ TEST(SafeBuffTest, addElementsOverflowDiscardResets) {
 
   EXPECT_EQ(discard, 0);
 }
-
-
-// -------- Test Remove ------------------------------------------------------------------
-
 
 TEST(SafeBuffTest, copyClearRecvSmallerThanNumEl) {
   SafeBuff<int> myBuf;
