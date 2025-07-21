@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <queue>
 #include <condition_variable>
-#include <katherinexx/katherinexx.hpp>
 #include <thread>
 #include "globals.h"
 
@@ -146,6 +145,7 @@ template <typename T> class SafeBuff : public ResourceGuard{
          */
         SafeBuff()
         {
+            //! @todo - potential improvent: deefine max in constructor
             buf_ = new T [MAX_BUFF_EL];
         }
 

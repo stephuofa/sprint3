@@ -10,13 +10,17 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-  hello_test
-  ./unit/hello_test.cc
+  all_tests
+  ./unit/all_tests.cc
+  ./unit/safebuff_tests.cc
+  ./unit/dataprocessor_tests.cc
 )
 target_link_libraries(
-  hello_test
+  all_tests
+  dat_lib
   GTest::gtest_main
 )
+target_include_directories(all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 
 include(GoogleTest)
-gtest_discover_tests(hello_test)
+gtest_discover_tests(all_tests)
