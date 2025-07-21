@@ -1,7 +1,7 @@
 # run from top level (sprint3)
 
 for arg in "$@"; do
-    if ["$arg" = "-clean" ]; then
+    if [ "$arg" = "-clean" ]; then
         rm -rf build
         break
     fi
@@ -16,11 +16,11 @@ for arg in "$@"; do
         cmake -DMAKE_MIN:BOOL=ON ..
         continue
     fi
-    if ["$arg" = "-test" ]; then
-        cmake -DMAKE_TEST:BOOL=ON ..
+    if [ "$arg" = "-test" ]; then
+        cmake -DMAKE_TESTS:BOOL=ON ..
         continue
     fi
-    if ["$arg" = "-release" ]; then
+    if [ "$arg" = "-release" ]; then
         cmake -DCMAKE_BUILD_TYPE=Release ..
     fi
 done

@@ -10,11 +10,11 @@ It builds on the [Katherine Control Library](https://github.com/petrmanek/libkat
 To build and run the main program:
 
 On Windows:<br>
-`./build.ps1 [Flags...]`<br>
-`./build/bin/<BuildMode>/sprint.exe <acq_time_seconds> [-v (for verbose)]`
+`./scripts/build.ps1 [Flags...]`<br>
+`.build/bin/<BuildMode>/sprint.exe <acq_time_seconds> [-v (for verbose)]`
 
 On Linux:<br>
-`./build.sh [Flags...]`<br>
+`./scripts/build.sh [Flags...]`<br>
 `./build/bin/sprint <acq_time_seconds> [-v (for verbose)]`
 
 Available Flags:
@@ -26,11 +26,11 @@ Available Flags:
 To build and run tests:<br>
 
 On Windows:<br>
-`./build.ps1 -test`<br>
+`./scripts/build.ps1 -test`<br>
 `./test.ps1`
 
 On Linux:<br>
-`./build.sh -test`<br>
+`./scripts/build.sh -test`<br>
 `./test.sh`
 
 
@@ -45,8 +45,8 @@ Example output from the minimal executable:<br>
 To build and run the minimal executable:
 1. Modify minimalEx.cpp to match the configurations required for your HardPix, and add your chip config to the core folder
 2. Build the executable <br>
-On unix systems: `.\build.sh -min` <br>
-On windows systems `.\build.ps1 -min`
+On unix systems: `./scripts/build.sh -min` <br>
+On windows systems `./scripts/build.ps1 -min`
 3. Run the executable
 On unix systems: `.\build\bin\minEx` <br>
 On windows systems: `.\build\bin\Debug\minEx.exe`
