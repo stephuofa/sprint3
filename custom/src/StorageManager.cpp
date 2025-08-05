@@ -74,7 +74,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
         size_t count = MAX_SPECIES_FILE_LINES + 1;
         size_t fileNo = 0;
         std::ofstream outFile;
-        while(!stopToken.stop_requested() || !speciesHitsQ->q_.empty())
+        while(!stopToken.stop_requested())
         {
             if(!checkUpdateOutFile(
                 count,
@@ -84,6 +84,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
                 fileNo,
                 MAX_SPECIES_FILE_LINES)
             ){ 
+                logger->log(LogLevel::LL_INFO,"StorageManager speciesThread cant open outfile");
                 return;
             }
 
@@ -105,6 +106,17 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
         }
             
         {   // Do any final processsing
+            if(!checkUpdateOutFile(
+                count,
+                outFile,
+                "speciesHits",
+                speciesPath,
+                fileNo,
+                MAX_SPECIES_FILE_LINES)
+            ){ 
+                logger->log(LogLevel::LL_INFO,"StorageManager speciesThread cant open outfile");
+                return;
+            }
             std::unique_lock lk(speciesHitsQ->mtx_);  
             while(!speciesHitsQ->q_.empty())
             {
@@ -153,6 +165,7 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
                 MAX_RAW_FILE_LINES)
             ){
                 //! @todo what action should we take if we can't open files 
+                logger->log(LogLevel::LL_INFO,"StorageManager rawThread cant open outfile");
                 return;
             }
             
@@ -171,18 +184,33 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             count += workBufElements;
         }
 
+        // do any final processing
+
         {
             std::unique_lock lk(rawHitsToWriteBuff->mtx_);
             workBufElements = rawHitsToWriteBuff->copyClear(workBuf,MAX_BUFF_EL);
-            }
-            for(size_t i = 0; i < workBufElements; i++)
-            {
-                outFile
-                    << (unsigned) workBuf[i].coord.x << " "
-                    << (unsigned) workBuf[i].coord.y << " "
-                    << workBuf[i].toa << " "
-                    << workBuf[i].tot << std::endl;
-            }
+        }
+
+        if(!checkUpdateOutFile(
+            count,
+            outFile,
+            "rawHits",
+            rawPath,
+            fileNo,
+            MAX_RAW_FILE_LINES)
+        ){
+            logger->log(LogLevel::LL_INFO,"StorageManager rawThread cant open outfile");
+            return;
+        }
+
+        for(size_t i = 0; i < workBufElements; i++)
+        {
+            outFile
+                << (unsigned) workBuf[i].coord.x << " "
+                << (unsigned) workBuf[i].coord.y << " "
+                << workBuf[i].toa << " "
+                << workBuf[i].tot << std::endl;
+        }
         outFile.flush();
         outFile.close();
         logger->log(LogLevel::LL_INFO,"StorageManager rawThread terminated");
