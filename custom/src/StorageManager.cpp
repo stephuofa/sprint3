@@ -72,7 +72,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
         logger->log(LogLevel::LL_INFO,"StorageManager speciesThread launched");
 
         size_t count = MAX_SPECIES_FILE_LINES + 1;
-        uint64_t fileNo = 0;
+        size_t fileNo = 0;
         std::ofstream outFile;
         while(!stopToken.stop_requested() || !speciesHitsQ->q_.empty())
         {
@@ -139,8 +139,8 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
         mode::pixel_type* workBuf = new mode::pixel_type[MAX_BUFF_EL];
         size_t workBufElements = 0;
 
-        uint64_t count = MAX_RAW_FILE_LINES + 1;
-        uint64_t fileNo = 0;
+        size_t count = MAX_RAW_FILE_LINES + 1;
+        size_t fileNo = 0;
         std::ofstream outFile;
         while(!stopToken.stop_requested())
         {
