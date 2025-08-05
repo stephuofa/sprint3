@@ -183,7 +183,7 @@ int main (int argc, char* argv[]){
 
         // destructors handle thread cleanup
         // ensure data producer cleans up before storage writers
-        dataProc.~DataProcessor(); 
+        // dataProc.~DataProcessor(); 
     }
     catch(const std::exception & e)
     {
