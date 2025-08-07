@@ -25,6 +25,13 @@ constexpr uint16_t CHIP_HEIGHT = 256;
 //! @brief number of pixels in chip
 constexpr uint32_t CHIP_AREA = CHIP_WIDTH * CHIP_HEIGHT;
 
+//! @brief amount of time (in seconds) to wait while power cycling the device
+constexpr uint16_t POWER_CYCLE_SECONDS = 30;
+
+//! @brief gpio pin responsible for controlling the relay
+constexpr uint16_t POWER_CYCLE_PIN = 42; // TODO
+
+
 // --------- / Hardpix Settings \ -------------------------------------------------------
 
 

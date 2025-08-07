@@ -161,8 +161,16 @@ int main (int argc, char* argv[]){
 
         // Connect and configure hardpix
         printf("\nConecting to hardpix...\n");
-        if (!acqCtrl.connectDevice()){
-            return EXIT_FAILURE;
+        while(!acqCtrl.connectDevice()){
+            char command[128];
+            snprintf(
+                command,
+                sizeof(command),
+                "./core/pwrcycle.sh %i %i",
+                POWER_CYCLE_PIN,
+                POWER_CYCLE_SECONDS
+            );
+            system(command);
         }
         acqCtrl.loadConfig(acqTime);
         
@@ -182,8 +190,7 @@ int main (int argc, char* argv[]){
         printf("See logfile %s for info\n", logFileName.c_str());
 
         // destructors handle thread cleanup
-        // ensure data producer cleans up before storage writers
-        // dataProc.~DataProcessor(); 
+        // ensure data producer cleans up before storage writers via ordering of declare
     }
     catch(const std::exception & e)
     {
