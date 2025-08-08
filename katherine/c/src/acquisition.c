@@ -181,7 +181,7 @@ dump_config(const katherine_acquisition_t *acq, const katherine_config_t *config
  * @return Error code.
  */
 int
-katherine_acquisition_init(katherine_acquisition_t *acq, katherine_device_t *device, void *ctx, size_t md_buffer_size, size_t pixel_buffer_size, int report_timeout, int fail_timeout)
+katherine_acquisition_init(katherine_acquisition_t *acq, katherine_device_t *device, void *ctx, size_t md_buffer_size, size_t pixel_buffer_size, int report_timeout, int fail_timeout,int lack_of_hit_timeout)
 {
     int res = 0;
 
@@ -211,6 +211,7 @@ katherine_acquisition_init(katherine_acquisition_t *acq, katherine_device_t *dev
 
     acq->report_timeout = report_timeout;
     acq->fail_timeout = fail_timeout;
+    acq->lack_of_hit_timeout = lack_of_hit_timeout;
 
     return res;
 
@@ -290,18 +291,13 @@ katherine_acquisition_fini(katherine_acquisition_t *acq)
                 if (acq->report_timeout > 0 && duration > acq->report_timeout && acq->pixel_buffer_valid > 0) {\
                     flush_buffer(acq);\
                 }\
+                if (duration > acq->lack_of_hit_timeout) {\
+                    printf("timeout between hits\n");\
+                    acq->state = ACQUISITION_TIMED_OUT;\
+                }\
                 \
                 duration = difftime(time(NULL), acq->acq_start_time);\
                 if (kill_off_time > 0 && duration > kill_off_time) {\
-                    time_t current_t = time(NULL);\
-                    printf("!!! TIMEOUT IMMINENT !!!\n");\
-                    printf("  kill_off_time:  %f\n", kill_off_time);\
-                    printf("  calculated duration: %f\n", duration);\
-                    printf("  acq pointer address: %p\n", (void*)acq);\
-                    printf("  acq_start_time address: %p\n", (void*)&(acq->acq_start_time));\
-                    printf("  acq_start_time value: %zu\n", acq->acq_start_time);\
-                    printf("  current_t value:  %zu\n", current_t);\
-                    \
                     acq->state = ACQUISITION_TIMED_OUT;\
                 }\
                 \

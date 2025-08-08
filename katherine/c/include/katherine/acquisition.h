@@ -99,6 +99,7 @@ typedef struct katherine_acquisition {
     time_t acq_start_time;
     int report_timeout;
     int fail_timeout;
+    int lack_of_hit_timeout;
 
     katherine_acquisition_handlers_t handlers;
     katherine_frame_info_t current_frame_info;
@@ -108,7 +109,7 @@ typedef struct katherine_acquisition {
 } katherine_acquisition_t;
 
 int
-katherine_acquisition_init(katherine_acquisition_t *acq, katherine_device_t *device, void *ctx, size_t md_buffer_size, size_t pixel_buffer_size, int report_timeout, int fail_timeout);
+katherine_acquisition_init(katherine_acquisition_t *acq, katherine_device_t *device, void *ctx, size_t md_buffer_size, size_t pixel_buffer_size, int report_timeout, int fail_timeout, int lack_of_hit_timeout);
 
 void
 katherine_acquisition_fini(katherine_acquisition_t *acq);

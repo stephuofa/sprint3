@@ -107,6 +107,81 @@ std::string updateRunNum(int runInt)
     return runNum;
 }
 
+int powerCycle(uint16_t seconds){
+    char command[128];
+    snprintf(
+        command,
+        sizeof(command),
+        "%s %i %i",
+        POWER_CYCLE_SCRIPT.c_str(),
+        POWER_CYCLE_PIN,
+        seconds
+    );
+    return system(command);
+}
+
+//! @todo - extract path to settings file
+int loop(size_t acqTime){
+
+    // get run number and increment it
+    int runInt = getRunNum();
+    std::string runNum = updateRunNum(runInt);
+
+    // start logging
+    std::string logFileName = "output/logs/log_run" + runNum + ".txt";
+    auto logger = std::make_shared<Logger>(logFileName);
+
+    // create data pipes
+    auto rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
+    auto rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
+    auto speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
+
+    // initialize core classes
+    AcqController acqCtrl(rawHitsBuff, rawHitsToWriteBuff, logger);
+    StorageManager storageMngr(runNum, speciesHitsQ, rawHitsToWriteBuff, logger);
+    DataProcessor dataProc(rawHitsBuff, speciesHitsQ, logger);
+
+    printf("\nLoading energy calibration files...\n");
+    if (!dataProc.loadEnergyCalib("core/calib")){return EXIT_FAILURE;}
+
+    printf("\nLoading energy configuration files...\n");
+    acqCtrl.loadConfig(acqTime);
+
+    printf("\nConecting to hardpix...\n");
+    int16_t seconds = POWER_CYCLE_SECONDS_MIN;
+    while(!acqCtrl.connectDevice()){
+        logger->log(LogLevel::LL_INFO,std::format("power cycling hardpix for %i seconds",seconds));
+        powerCycle(seconds);
+        if(seconds < POWER_CYCLE_SECONDS_MAX){
+            seconds = seconds * 2;
+        }
+    }
+    
+    printf("\nLaunching threads...\n");
+    storageMngr.genHeader(time(NULL),acqCtrl.getConfig());
+    storageMngr.launch();
+    dataProc.launch();
+    // give threads time to launch
+    std::this_thread::sleep_for(std::chrono::seconds(1)); 
+
+    printf("\nLaunching acquisition...\n");
+    bool goodAcq = true;
+    try{
+        acqCtrl.runAcq();
+    } catch (std::runtime_error){
+        goodAcq = false;
+        logger->log(LogLevel::LL_ERROR,"error during acquisition, restarting");
+        logger->log(LogLevel::LL_INFO,"power cycling hardpix");
+        powerCycle(POWER_CYCLE_SECONDS_MIN);
+    }
+
+    printf("\nAcquisition finished %s\n",(goodAcq? "normally":"abnormally"));
+    printf("See logfile %s for info\n", logFileName.c_str());
+
+    return goodAcq;
+    // destructors handle thread cleanup
+    // order of declaration ensures data producer cleans up before storage writers
+}
 
 bool debugPrints = false;
 int main (int argc, char* argv[]){
@@ -137,60 +212,7 @@ int main (int argc, char* argv[]){
         // make paths for output data
         createReqPaths();
 
-        // get run number and increment it
-        int runInt = getRunNum();
-        std::string runNum = updateRunNum(runInt);
-
-        // start logging
-        std::string logFileName = "output/logs/log_run" + runNum + ".txt";
-        logger = std::make_shared<Logger>(logFileName);
-
-        // create data pipes
-        auto rawHitsBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
-        auto rawHitsToWriteBuff = std::make_shared<SafeBuff<mode::pixel_type>>();
-        auto speciesHitsQ = std::make_shared<SafeQueue<SpeciesHit>>();
-
-        // initialize core classes
-        AcqController acqCtrl(rawHitsBuff, rawHitsToWriteBuff, logger);
-        StorageManager storageMngr(runNum, speciesHitsQ, rawHitsToWriteBuff, logger);
-        DataProcessor dataProc(rawHitsBuff, speciesHitsQ, logger);
-
-        //! @todo - extract path to settings file
-        printf("\nLoading energy calibration files...\n");
-        if (!dataProc.loadEnergyCalib("core/calib")){return EXIT_FAILURE;}
-
-        // Connect and configure hardpix
-        printf("\nConecting to hardpix...\n");
-        while(!acqCtrl.connectDevice()){
-            char command[128];
-            snprintf(
-                command,
-                sizeof(command),
-                "./core/pwrcycle.sh %i %i",
-                POWER_CYCLE_PIN,
-                POWER_CYCLE_SECONDS
-            );
-            system(command);
-        }
-        acqCtrl.loadConfig(acqTime);
-        
-        // Acquire
-        //! @todo we need to finalize what condition causes us to stop acquiring
-        printf("\nLaunching threads...\n");
-        storageMngr.genHeader(time(NULL),acqCtrl.getConfig());
-        storageMngr.launch();
-        dataProc.launch();
-        // give threads time to launch
-        std::this_thread::sleep_for(std::chrono::seconds(1)); 
-
-        printf("\nLaunching acquisition...\n");
-        acqCtrl.runAcq();
-
-        printf("\nAcquisition finished!\n");
-        printf("See logfile %s for info\n", logFileName.c_str());
-
-        // destructors handle thread cleanup
-        // ensure data producer cleans up before storage writers via ordering of declare
+        while(!loop(acqTime));
     }
     catch(const std::exception & e)
     {

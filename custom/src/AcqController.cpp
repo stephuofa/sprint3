@@ -230,6 +230,7 @@ bool AcqController::runAcq(){
         sizeof(mode::pixel_type) * 65536,
         500ms,
         10s,
+        HIT_TIMEOUT,
         true
     };
 

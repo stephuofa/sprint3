@@ -82,7 +82,7 @@ private:
 
 public:
     template<typename Rep1, typename Period1, typename Rep2, typename Period2>
-    base_acquisition(device& dev, std::size_t md_buffer_size, std::size_t pixel_buffer_size, std::chrono::duration<Rep1, Period1> report_timeout, std::chrono::duration<Rep2, Period2> fail_timeout, acq_mode mode, bool fast_vco_enabled, bool decode_data)
+    base_acquisition(device& dev, std::size_t md_buffer_size, std::size_t pixel_buffer_size, std::chrono::duration<Rep1, Period1> report_timeout, std::chrono::duration<Rep2, Period2> fail_timeout,int nohit_timeout, acq_mode mode, bool fast_vco_enabled, bool decode_data)
         :acq_{},
          mode_{mode},
          fast_vco_enabled_{fast_vco_enabled},
@@ -93,7 +93,7 @@ public:
     {
         using namespace std::chrono;
 
-        int res = katherine_acquisition_init(&acq_, dev.c_dev(), reinterpret_cast<void*>(this), md_buffer_size, pixel_buffer_size, duration_cast<milliseconds>(report_timeout).count(), duration_cast<milliseconds>(fail_timeout).count());
+        int res = katherine_acquisition_init(&acq_, dev.c_dev(), reinterpret_cast<void*>(this), md_buffer_size, pixel_buffer_size, duration_cast<milliseconds>(report_timeout).count(), duration_cast<milliseconds>(fail_timeout).count(),nohit_timeout);
         if (res != 0) {
             throw katherine::system_error{res};
         }
@@ -240,8 +240,8 @@ private:
 
 public:
     template<typename Rep1, typename Period1, typename Rep2, typename Period2>
-    acquisition(device& dev, std::size_t md_buffer_size, std::size_t pixel_buffer_size, std::chrono::duration<Rep1, Period1> report_timeout, std::chrono::duration<Rep2, Period2> fail_timeout, bool decode_data)
-      :base_acquisition{dev, md_buffer_size, pixel_buffer_size, report_timeout, fail_timeout, AcqMode::mode, AcqMode::fast_vco_enabled, decode_data},
+    acquisition(device& dev, std::size_t md_buffer_size, std::size_t pixel_buffer_size, std::chrono::duration<Rep1, Period1> report_timeout, std::chrono::duration<Rep2, Period2> fail_timeout, int nohit_timeout, bool decode_data)
+      :base_acquisition{dev, md_buffer_size, pixel_buffer_size, report_timeout, fail_timeout, nohit_timeout, AcqMode::mode, AcqMode::fast_vco_enabled, decode_data},
          pixels_received_handler_{[](const pixel_type *, std::size_t){ }}
     {
         acq_.handlers.pixels_received = acquisition::forward_pixels_received;

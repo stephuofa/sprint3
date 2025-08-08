@@ -25,14 +25,29 @@ constexpr uint16_t CHIP_HEIGHT = 256;
 //! @brief number of pixels in chip
 constexpr uint32_t CHIP_AREA = CHIP_WIDTH * CHIP_HEIGHT;
 
-//! @brief amount of time (in seconds) to wait while power cycling the device
-constexpr uint16_t POWER_CYCLE_SECONDS = 30;
+// --------- / Hardpix Settings \ -------------------------------------------------------
+
+
+
+// -------- \ Power Cycle Settings / ----------------------------------------------------
 
 //! @brief gpio pin responsible for controlling the relay
-constexpr uint16_t POWER_CYCLE_PIN = 42; // TODO
+constexpr uint16_t POWER_CYCLE_PIN = 0;
 
+//! @brief path to power cycling script
+const std::string POWER_CYCLE_SCRIPT = "./core/pwrcycle.sh";
 
-// --------- / Hardpix Settings \ -------------------------------------------------------
+//! @brief seconds to wait while power cycling the hardpix on first try
+constexpr uint16_t POWER_CYCLE_SECONDS_MIN = 10;
+
+//! @brief maximum seconds to wait while power cycling the hardpix on subsequent attempts
+constexpr uint16_t POWER_CYCLE_SECONDS_MAX = 160;
+
+//! @brief amount of milliseconds without hit that should cause a powercycle and restart
+constexpr uint32_t HIT_TIMEOUT = 60*1000;
+
+// -------- / Power Cycle Settings \ ----------------------------------------------------
+
 
 
 // -------- \ Buffering Settings / ------------------------------------------------------
@@ -50,5 +65,3 @@ constexpr size_t MAX_SPECIES_FILE_LINES = 33554432; // ~5GB
 constexpr size_t MAX_BURST_FILE_LINES = 33554432; // ~5GB
 
 // -------- / Buffering Settings \ ------------------------------------------------------
-
-
