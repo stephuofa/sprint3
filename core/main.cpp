@@ -18,7 +18,6 @@
 #include <filesystem>
 #include <format>
 
-static std::string PATH_TO_RUN_NUM_FILE = "core/run_num.txt";
 
 void checkCreateDir(std::string& string){
     try {
@@ -35,10 +34,11 @@ void checkCreateDir(std::string& string){
 void createReqPaths(){
     std::vector<std::string> dirs = 
     {
-        "output",
-        "output/logs",
-        "output/data",
-        "output/data/raw", "output/data/species", "output/data/burst"
+        OUTPUT_DIR,
+        LOGS_DIR,
+        DATA_DIR,
+        RAW_DATA_DIR,
+        SPECIES_DATA_DIR
     };
 
     for (auto itr = dirs.begin(); itr != dirs.end(); itr++){
@@ -68,7 +68,7 @@ std::string parseForRunNum()
     int maxNum = 0;
     std::regex file_regex(R"(rawHits_RN-(\d+)_FN-\d+\.txt)");
 
-    for (const auto& entry : std::filesystem::directory_iterator("output/data/raw"))
+    for (const auto& entry : std::filesystem::directory_iterator(RAW_DATA_DIR))
     {
         if(entry.is_regular_file()){
             std::string filename = entry.path().filename().string();
@@ -94,8 +94,7 @@ std::string updateRunNum(int runInt)
 {
     std::string runNum;
     if (runInt < 0){
-        // we failed to get a valid run_int
-        //-> search through output and find the highest
+        // we failed to get a valid run_int -> search through files for highest
         runNum = parseForRunNum();
     } else{
         runNum = std::to_string(runInt+1);
@@ -120,7 +119,6 @@ int powerCycle(uint16_t seconds){
     return system(command);
 }
 
-//! @todo - extract path to settings file
 int loop(size_t acqTime){
 
     // get run number and increment it
@@ -128,7 +126,7 @@ int loop(size_t acqTime){
     std::string runNum = updateRunNum(runInt);
 
     // start logging
-    std::string logFileName = "output/logs/log_run" + runNum + ".txt";
+    std::string logFileName = LOGS_DIR + "/log_run" + runNum + ".txt";
     auto logger = std::make_shared<Logger>(logFileName);
 
     // create data pipes
@@ -142,7 +140,7 @@ int loop(size_t acqTime){
     DataProcessor dataProc(rawHitsBuff, speciesHitsQ, logger);
 
     printf("\nLoading energy calibration files...\n");
-    if (!dataProc.loadEnergyCalib("core/calib")){return EXIT_FAILURE;}
+    if (!dataProc.loadEnergyCalib(PATH_TO_CALIB)){return EXIT_FAILURE;}
 
     printf("\nLoading energy configuration files...\n");
     acqCtrl.loadConfig(acqTime);

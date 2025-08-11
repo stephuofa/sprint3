@@ -145,7 +145,7 @@ template <typename T> class SafeBuff : public ResourceGuard{
          */
         SafeBuff()
         {
-            //! @todo - potential improvent: deefine max in constructor
+            //! @todo - potential improvent: define max in constructor
             buf_ = new T [MAX_BUFF_EL];
         }
 

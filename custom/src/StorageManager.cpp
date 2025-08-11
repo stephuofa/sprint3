@@ -27,7 +27,6 @@ void StorageManager::launch(){
     });
 }
 
-// creates a new output file if required
 bool StorageManager::checkUpdateOutFile(
     size_t& lineCount,
     std::ofstream& outFile,
@@ -48,7 +47,7 @@ bool StorageManager::checkUpdateOutFile(
             "{}_RN-{}_FN-{}.txt",
             filename,runNum,std::to_string(fileNo)
         );
-        outFile = std::ofstream(storagePath + outFileName);
+        outFile = std::ofstream(storagePath + "/" + outFileName);
         outFile << header.str();
         lineCount = 0;
         fileNo++;
@@ -79,8 +78,8 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
             if(!checkUpdateOutFile(
                 count,
                 outFile,
-                "speciesHits",
-                speciesPath,
+                SPECIES_FILE_NAME,
+                SPECIES_DATA_DIR,
                 fileNo,
                 MAX_SPECIES_FILE_LINES)
             ){ 
@@ -109,8 +108,8 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
             if(!checkUpdateOutFile(
                 count,
                 outFile,
-                "speciesHits",
-                speciesPath,
+                SPECIES_FILE_NAME,
+                SPECIES_DATA_DIR,
                 fileNo,
                 MAX_SPECIES_FILE_LINES)
             ){ 
@@ -159,8 +158,8 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             if(!checkUpdateOutFile(
                 count,
                 outFile,
-                "rawHits",
-                rawPath,
+                RAW_FILE_NAME,
+                RAW_DATA_DIR,
                 fileNo,
                 MAX_RAW_FILE_LINES)
             ){
@@ -194,8 +193,8 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
         if(!checkUpdateOutFile(
             count,
             outFile,
-            "rawHits",
-            rawPath,
+            RAW_FILE_NAME,
+            RAW_DATA_DIR,
             fileNo,
             MAX_RAW_FILE_LINES)
         ){
@@ -221,8 +220,8 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
         //! @todo - should we relaunch thread/program on fatal error
         logger->log(
             LogLevel::LL_FATAL,
-            std::format("caught exception in StorageManager-rawThread: \
-type-[{}] msg-[{}]",typeid(e).name(),e.what())
+            std::format("caught exception in StorageManager-rawThread:type-[{}] msg-[{}]",
+                typeid(e).name(),e.what())
         );
     }
 }

@@ -45,10 +45,8 @@ bool AcqController::testConnection(){
 }
 
 bool AcqController::connectDevice(){
-
-    //! @todo extract connection attempt magic numbers to settings file
     bool devConnected = false;
-    for(size_t i = 0; i < 5 ; i++){
+    for(size_t i = 0; i < CNXT_ATTEMPTS; i++){
         try
         {
             device.emplace(HP_ADDRESS);
@@ -61,7 +59,7 @@ bool AcqController::connectDevice(){
                 LogLevel::LL_ERROR,
                 std::format("failed to create sockets - {}",e.what())
             );
-            std::this_thread::sleep_for(std::chrono::seconds(3));
+            std::this_thread::sleep_for(std::chrono::seconds(SEC_BTW_CNXT_ATTEMPTS));
         }
     }
 
@@ -72,7 +70,7 @@ bool AcqController::connectDevice(){
     }
 
     devConnected = false;
-    for(size_t i = 0; i < 5; i++){
+    for(size_t i = 0; i < CNXT_ATTEMPTS; i++){
         try
         {
             if(testConnection())
@@ -88,7 +86,7 @@ bool AcqController::connectDevice(){
                 std::format("exception thrown during connection test: {}",e.what())
             );
         }
-        std::this_thread::sleep_for(std::chrono::seconds(3));
+        std::this_thread::sleep_for(std::chrono::seconds(SEC_BTW_CNXT_ATTEMPTS));
     }
 
     if(devConnected){
@@ -140,8 +138,7 @@ void AcqController::loadConfig(const size_t acqTimeSec){
     config.set_dacs(std::move(dacs));
 
     //! @todo - add error catch wrapper for loading file
-    //! @todo - extract file path to settings file
-    katherine::px_config px_config = katherine::load_bmc_file("core/chipconfig.bmc");
+    katherine::px_config px_config = katherine::load_bmc_file(PATH_TO_CHIP_CONFIG);
     config.set_pixel_config(std::move(px_config));
 }
 
@@ -216,7 +213,7 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
     }
 }
 
-//! @todo - return an error code instead of a bool
+//! @todo - potential improvement: return an error code instead of a bool
 bool AcqController::runAcq(){
     if(!device.has_value()){
         return false;

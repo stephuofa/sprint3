@@ -157,13 +157,11 @@ void DataProcessor::processingLoop(std::stop_token stopToken){
         size_t workBufElements = 0;
 
         // stop only when we've been requested to AND all the data has been processed
-
         while(!stopToken.stop_requested()){
 
             { // scope of lock on rawHitsBuff
                 std::unique_lock lk(rawHitsBuff->mtx_);
                 if(!stopToken.stop_requested()){
-                    //! @todo -add predicate to handle spurious wake up
                     rawHitsBuff->cv_.wait(lk); 
                 }
                 // we have acquired lock and can do processing

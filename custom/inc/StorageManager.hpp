@@ -20,11 +20,7 @@ class StorageManager final {
         //! @brief string describing the run number of the software
         // (e.g. how many times we've run the application)
         std::string runNum;
-
-        //! @todo - extract to settings file
-        std::string rawPath = "output/data/raw/";
-        std::string speciesPath = "output/data/species/";
-        
+       
         //! @brief species hit buffer, species hits get written to file
         std::shared_ptr<SafeQueue<SpeciesHit>> speciesHitsQ;
 

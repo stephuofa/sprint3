@@ -2,11 +2,36 @@
 #include <katherinexx/acquisition.hpp>
 #include <string>
 
+// --------- \ Misc / -------------------------------------------------------------------
+
 //! @brief string describing software version
 const std::string SOFTWARE_VERSION = "v0";
 
 //! @brief controls if hits print; set by cmd line arg, default = false
 bool extern debugPrints;
+
+// --------- / Misc \ -------------------------------------------------------------------
+
+
+// --------- \ Path and Name Settings / -------------------------------------------------
+
+const std::string PATH_TO_RUN_NUM_FILE = "core/run_num.txt";
+const std::string PATH_TO_CALIB = "core/calib";
+const std::string POWER_CYCLE_SCRIPT = "./core/pwrcycle.sh";
+const std::string PATH_TO_CHIP_CONFIG = "core/chipconfig.bmc";
+
+const std::string OUTPUT_DIR = "output";
+const std::string LOGS_DIR = OUTPUT_DIR + "/logs";
+const std::string DATA_DIR = OUTPUT_DIR + "/data";
+const std::string RAW_DATA_DIR = DATA_DIR + "/raw";
+const std::string SPECIES_DATA_DIR = DATA_DIR + "/species";
+
+const std::string SPECIES_FILE_NAME = "speciesHits";
+const std::string RAW_FILE_NAME = "rawHits";
+
+// --------- / Path Settings \ ----------------------------------------------------------
+
+
 
 // --------- \ Hardpix Settings / -------------------------------------------------------
 
@@ -25,6 +50,10 @@ constexpr uint16_t CHIP_HEIGHT = 256;
 //! @brief number of pixels in chip
 constexpr uint32_t CHIP_AREA = CHIP_WIDTH * CHIP_HEIGHT;
 
+//! @brief number of times to attempt to connect before power-cycling
+constexpr size_t CNXT_ATTEMPTS = 5;
+constexpr size_t SEC_BTW_CNXT_ATTEMPTS = 3;
+
 // --------- / Hardpix Settings \ -------------------------------------------------------
 
 
@@ -33,9 +62,6 @@ constexpr uint32_t CHIP_AREA = CHIP_WIDTH * CHIP_HEIGHT;
 
 //! @brief gpio pin responsible for controlling the relay
 constexpr uint16_t POWER_CYCLE_PIN = 0;
-
-//! @brief path to power cycling script
-const std::string POWER_CYCLE_SCRIPT = "./core/pwrcycle.sh";
 
 //! @brief seconds to wait while power cycling the hardpix on first try
 constexpr uint16_t POWER_CYCLE_SECONDS_MIN = 10;
@@ -62,6 +88,5 @@ constexpr size_t MAX_BUFF_EL = 65536;
 // File Size (Soft) Limitations 
 constexpr size_t MAX_RAW_FILE_LINES = 33554432; // ~5GB
 constexpr size_t MAX_SPECIES_FILE_LINES = 33554432; // ~5GB
-constexpr size_t MAX_BURST_FILE_LINES = 33554432; // ~5GB
 
 // -------- / Buffering Settings \ ------------------------------------------------------
