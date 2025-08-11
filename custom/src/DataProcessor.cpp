@@ -71,7 +71,7 @@ uint8_t getClusterGrade(
         if (abs(xOffset) > 1) { return outlier; } // hit out of bounds
 
         int yOffset = buf[curInd].coord.y - buf[maxEInd].coord.y;
-        if (abs(yOffset > 1)) { return outlier; } // hit out of bounds
+        if (abs(yOffset) > 1) { return outlier; } // hit out of bounds
 
         sum += gridValue[yOffset + 1][xOffset + 1]; // remap indice
     }
