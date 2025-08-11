@@ -118,7 +118,7 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
                 totEnergy += curE;
 
                 // if applicable, update cluster center
-                if (curE > maxEInd) 
+                if (curE > maxEnergy) 
                 {
                     maxEInd = i;
                     maxEnergy = curE;
@@ -195,6 +195,10 @@ void DataProcessor::processingLoop(std::stop_token stopToken){
 
 double DataProcessor::getEnergy(const mode::pixel_type& px)
 {
+    if(!calibLoaded){
+        return px.tot;
+    }
+
     size_t pixel_idx = CHIP_WIDTH*px.coord.y + px.coord.x; 
     uint16_t tot = px.tot;
     const CalibConstants& lookup{ lookupMatrix[pixel_idx] };
@@ -268,6 +272,7 @@ bool DataProcessor::loadEnergyCalib(const std::string& calibFolderPath)
         value.atb = a[i] * t[i] - b[i];
         value.fac = 4 * a[i] * c[i];
     }
+    calibLoaded = true;
     return true;
 }
 

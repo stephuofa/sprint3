@@ -18,6 +18,7 @@ add_executable(
 target_link_libraries(
   all_tests
   dat_lib
+  log_lib
   GTest::gtest_main
 )
 target_include_directories(all_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)

@@ -62,6 +62,8 @@ class DataProcessor final{
             size_t expectedCount
         );
 
+        bool calibLoaded = false;
+
     public:
         /**
          * @fn DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
@@ -108,6 +110,8 @@ class DataProcessor final{
          * 
          * @param[in] workBuf buffer containing raw hits to process
          * @param[in] workBufElements number of raw hits in workBuf
+         * 
+         * @note loadEnergyCalib must be called before calling
          * 
          * @note returns void, but pushes to species hit buffer
          */
