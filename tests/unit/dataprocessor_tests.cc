@@ -72,29 +72,88 @@ TEST_F(DataProcFixture, detectGrade1_1) {
   ProcessAndCompareGrade(fakeData,4,expected,1);
 }
 
-// TEST(ProcessingTest, detectGrade2) {
-//   EXPECT_TRUE(false) << "Not Implemented";
-// }
+TEST_F(DataProcFixture, detectGrade2) {
+  mode::pixel_type fakeData[] = {
+    mode::pixel_type(katherine_coord(10,10),1,0,100), // center
+    mode::pixel_type(katherine_coord(10,11),1,0,1), // 64
+    mode::pixel_type(katherine_coord(9,9),1,0,1), // 1
+    mode::pixel_type(katherine_coord(11,9),1,0,1) // 4
+  };
 
-// TEST(ProcessingTest, detectGrade3) {
-//   EXPECT_TRUE(false) << "Not Implemented";
-// }
+  uint8_t expected[] = {2};
 
-// TEST(ProcessingTest, detectGrade4) {
-//   EXPECT_TRUE(false) << "Not Implemented";
-// }
+  ProcessAndCompareGrade(fakeData,4,expected,1);
+}
 
-// TEST(ProcessingTest, detectGrade5) {
-//   EXPECT_TRUE(false) << "Not Implemented";
-// }
+TEST_F(DataProcFixture, detectGrade3) {
+  mode::pixel_type fakeData[] = {
+    mode::pixel_type(katherine_coord(10,10),1,0,100),
+    mode::pixel_type(katherine_coord(9,10),2,0,1)
+  };
 
-// TEST(ProcessingTest, detectGrade6) {
-//   EXPECT_TRUE(false) << "Not Implemented";
-// }
+  uint8_t expected[] = {3};
 
-// TEST(ProcessingTest, detectGrade7TooManyHits) {
-//   EXPECT_TRUE(false) << "Not Implemented";
-// }
+  ProcessAndCompareGrade(fakeData,2,expected,1);
+}
+
+TEST_F(DataProcFixture, detectGrade4) {
+  mode::pixel_type fakeData[] = {
+    mode::pixel_type(katherine_coord(10,10),1,0,100),
+    mode::pixel_type(katherine_coord(11,10),2,0,1)
+  };
+
+  uint8_t expected[] = {4};
+
+  ProcessAndCompareGrade(fakeData,2,expected,1);
+}
+
+TEST_F(DataProcFixture, detectGrade5) {
+  mode::pixel_type fakeData[] = {
+    mode::pixel_type(katherine_coord(10,10),1,0,100),
+    mode::pixel_type(katherine_coord(11,10),2,0,1),
+    mode::pixel_type(katherine_coord(11,9),2,0,1),
+    mode::pixel_type(katherine_coord(9,9),2,0,1)
+  };
+
+  uint8_t expected[] = {5};
+
+  ProcessAndCompareGrade(fakeData,4,expected,1);
+}
+
+TEST_F(DataProcFixture, detectGrade6) {
+  mode::pixel_type fakeData[] = {
+    mode::pixel_type(katherine_coord(10,10),1,0,100),
+    mode::pixel_type(katherine_coord(9,10),2,0,1),
+    mode::pixel_type(katherine_coord(10,9),2,0,1),
+  };
+
+  uint8_t expected[] = {6};
+
+  ProcessAndCompareGrade(fakeData,3,expected,1);
+}
+
+TEST_F(DataProcFixture, detectGrade7TooManyHits) {
+    mode::pixel_type fakeData[] = {
+    
+    mode::pixel_type(katherine_coord(6,4),3,0,1),
+    mode::pixel_type(katherine_coord(6,5),3,0,1),
+    mode::pixel_type(katherine_coord(6,6),3,0,1),
+
+    mode::pixel_type(katherine_coord(5,4),3,0,1),
+    mode::pixel_type(katherine_coord(5,5),3,0,2), // center
+    mode::pixel_type(katherine_coord(5,6),3,0,1),
+
+    mode::pixel_type(katherine_coord(4,4),3,0,1),
+    mode::pixel_type(katherine_coord(4,5),3,0,1),
+    mode::pixel_type(katherine_coord(4,6),3,0,1),
+
+    mode::pixel_type(katherine_coord(4,6),4,0,1),
+  };
+  
+  uint8_t expected[] = {7};
+    
+  ProcessAndCompareGrade(fakeData,10,expected,1);
+}
 
 TEST_F(DataProcFixture, detectGrade7HitOutOfBoundsAboveX) {
   mode::pixel_type fakeData[] = {
@@ -140,13 +199,39 @@ TEST_F(DataProcFixture, detectGrade7HitOutOfBoundsAboveY) {
   ProcessAndCompareGrade(fakeData,2,expected,1);
 }
 
-// TEST_F(DataProcFixture, detectGrade7BadPattern) {
-//     mode::pixel_type fakeData[] = {
-//     mode::pixel_type(katherine_coord(5,5),3,0,10),
-//     mode::pixel_type(katherine_coord(5,3),3,0,10),
-//   };
-  
-//   uint8_t expected[] = {7};
+TEST_F(DataProcFixture, detectGrade7BadPattern) {
+    mode::pixel_type fakeData[] = {
     
-//   ProcessAndCompareGrade(fakeData,2,expected,1);
-// }
+    mode::pixel_type(katherine_coord(6,4),3,0,1),
+    mode::pixel_type(katherine_coord(6,5),3,0,1),
+    mode::pixel_type(katherine_coord(6,6),3,0,1),
+
+    mode::pixel_type(katherine_coord(5,4),3,0,1),
+    mode::pixel_type(katherine_coord(5,5),3,0,2), // center
+    mode::pixel_type(katherine_coord(5,6),3,0,1),
+
+    mode::pixel_type(katherine_coord(4,4),3,0,1),
+    mode::pixel_type(katherine_coord(4,5),3,0,1),
+    mode::pixel_type(katherine_coord(4,6),3,0,1),
+  };
+  
+  uint8_t expected[] = {7};
+    
+  ProcessAndCompareGrade(fakeData,9,expected,1);
+}
+
+TEST_F(DataProcFixture, detectMultipleClusters) {
+  mode::pixel_type fakeData[] = {
+    mode::pixel_type(katherine_coord(10,10),1,0,100),
+    mode::pixel_type(katherine_coord(9,10),2,0,1),
+
+    mode::pixel_type(katherine_coord(10,10),10,0,100),
+    mode::pixel_type(katherine_coord(11,10),11,0,1),
+    mode::pixel_type(katherine_coord(11,9),9,0,1),
+    mode::pixel_type(katherine_coord(9,9),11,0,1)
+  };
+
+  uint8_t expected[] = {3,5};
+
+  ProcessAndCompareGrade(fakeData,6,expected,2);
+}
