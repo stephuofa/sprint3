@@ -3,7 +3,7 @@
 #include "globals.h"
 #include <iostream>
 #include <map>
-#include <cmath>
+#include <stdlib.h>
 
 //! @brief lookup of grade using grid sum
 std::unordered_map<uint8_t,uint8_t> gradeLookup =
@@ -71,7 +71,7 @@ uint8_t getClusterGrade(
         if (abs(xOffset) > 1) { return outlier; } // hit out of bounds
 
         int yOffset = buf[curInd].coord.y - buf[maxEInd].coord.y;
-        if (abs(yOffset > 1)) { return outlier; } // hit out of bounds
+        if (abs(yOffset) > 1) { return outlier; } // hit out of bounds
 
         sum += gridValue[yOffset + 1][xOffset + 1]; // remap indice
     }
