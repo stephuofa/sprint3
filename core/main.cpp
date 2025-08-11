@@ -4,7 +4,6 @@
  */
 
 #include <stdio.h>
-#include <iostream>
 #include "AcqController.hpp"
 #include "Logger.hpp"
 #include "DataProcessor.hpp"
@@ -17,6 +16,7 @@
 #include <string>
 #include <regex>
 #include <filesystem>
+#include <format>
 
 static std::string PATH_TO_RUN_NUM_FILE = "core/run_num.txt";
 
@@ -150,7 +150,9 @@ int loop(size_t acqTime){
     printf("\nConecting to hardpix...\n");
     int16_t seconds = POWER_CYCLE_SECONDS_MIN;
     while(!acqCtrl.connectDevice()){
-        logger->log(LogLevel::LL_INFO,std::format("power cycling hardpix for %i seconds",seconds));
+        logger->log(
+            LogLevel::LL_INFO,
+            std::format("power cycling hardpix for {} seconds", seconds));
         powerCycle(seconds);
         if(seconds < POWER_CYCLE_SECONDS_MAX){
             seconds = seconds * 2;
@@ -161,16 +163,18 @@ int loop(size_t acqTime){
     storageMngr.genHeader(time(NULL),acqCtrl.getConfig());
     storageMngr.launch();
     dataProc.launch();
-    // give threads time to launch
-    std::this_thread::sleep_for(std::chrono::seconds(1)); 
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // give threads time to launch
 
     printf("\nLaunching acquisition...\n");
     bool goodAcq = true;
     try{
         acqCtrl.runAcq();
-    } catch (std::runtime_error){
+    } catch (std::runtime_error &e){
         goodAcq = false;
-        logger->log(LogLevel::LL_ERROR,"error during acquisition, restarting");
+        logger->log(
+            LogLevel::LL_ERROR,
+            std::format("error during acquisition: type-[{}] msg-[{}], restarting",
+                typeid(e).name(),e.what()));
         logger->log(LogLevel::LL_INFO,"power cycling hardpix");
         powerCycle(POWER_CYCLE_SECONDS_MIN);
     }
@@ -185,48 +189,29 @@ int loop(size_t acqTime){
 
 bool debugPrints = false;
 int main (int argc, char* argv[]){
-    std::shared_ptr<Logger> logger;
+    size_t acqTime;
     try
     {
-        // parse command line args
-        size_t acqTime;
-        try
+        if (argc < 2)
         {
-            if (argc < 2)
-            {
-                throw std::runtime_error("");
-            }
-            acqTime = std::stoi(argv[1]);
-            if (argc > 2) {debugPrints = true;}
-            printf("Acquisition Time Setting = %zu s\n", acqTime);
-            printf("Print statements %s\n", debugPrints?"ON":"OFF");
+            throw std::runtime_error("");
         }
-        catch (const std::exception&)
-        {
-            printf("Error parsing command line arguments!\n");
-            printf("Should take the form:\n");
-            printf("sprint <acq_time_seconds> [-v (for verbose)]\n");
-            return EXIT_SUCCESS;
-        }
-
-        // make paths for output data
-        createReqPaths();
-
-        while(!loop(acqTime));
+        acqTime = std::stoi(argv[1]);
+        if (argc > 2) {debugPrints = true;}
+        printf("Acquisition Time Setting = %zu s\n", acqTime);
+        printf("Print statements %s\n", debugPrints?"ON":"OFF");
     }
-    catch(const std::exception & e)
+    catch (const std::exception&)
     {
-        //! @todo - should we relaunch on fatal error?
-        // what if we just missed the end of acq frame and got a timeout error
-        logger->log(
-            LogLevel::LL_FATAL,
-            std::format(
-                    "caught exception in main: type-[{}] msg-[{}]",
-                    typeid(e).name(),e.what()
-                )
-            );
+        printf("Error parsing command line arguments!\n");
+        printf("Should take the form:\n");
+        printf("sprint <acq_time_seconds> [-v (for verbose)]\n");
         return EXIT_FAILURE;
     }
 
+    createReqPaths();
+
+    // todo - once we have a RTC, we can retrigger acqs based on remaining time
+    while(!loop(acqTime));
     return EXIT_SUCCESS;
 }
