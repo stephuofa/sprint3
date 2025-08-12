@@ -3,7 +3,7 @@
 #include "globals.h"
 #include <iostream>
 #include <map>
-#include <stdlib.h>
+#include <cmath>
 
 //! @brief lookup of grade using grid sum
 std::unordered_map<uint8_t,uint8_t> gradeLookup =

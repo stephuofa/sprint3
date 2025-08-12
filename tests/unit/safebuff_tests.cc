@@ -118,8 +118,10 @@ TEST(SafeBuffTest, safeFinish) {
   auto myBuf = std::make_shared<SafeBuff<int>>();
   
   std::jthread t =  std::jthread([&](std::stop_token stoken){
-    std::unique_lock lck(myBuf->mtx_);
-    myBuf->cv_.wait(lck);
+    while(!stoken.stop_requested()){
+      std::unique_lock lck(myBuf->mtx_);
+      myBuf->cv_.wait(lck);
+    }
   });
 
   // allow thread to launch before we request rejoin
