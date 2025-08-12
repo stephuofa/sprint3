@@ -97,7 +97,7 @@ bool AcqController::connectDevice(){
     return devConnected;
 }
 
-void AcqController::loadConfig(const size_t acqTimeSec){
+bool AcqController::loadConfig(const size_t acqTimeSec){
     using namespace std::literals::chrono_literals;
 
     config.set_bias_id(0);
@@ -137,9 +137,18 @@ void AcqController::loadConfig(const size_t acqTimeSec){
     dacs.named.PLL_Vcntrl            = 128;
     config.set_dacs(std::move(dacs));
 
-    //! @todo - add error catch wrapper for loading file
-    katherine::px_config px_config = katherine::load_bmc_file(PATH_TO_CHIP_CONFIG);
-    config.set_pixel_config(std::move(px_config));
+    try{
+        katherine::px_config px_config = katherine::load_bmc_file(PATH_TO_CHIP_CONFIG);
+        config.set_pixel_config(std::move(px_config));
+    } catch(const std::exception &e){
+        logger->log(
+            LogLevel::LL_FATAL,
+            std::format("pixel configuration failed: type-[{}] msg-[{}]",
+                typeid(e).name(),e.what())
+        );
+        return false;
+    }
+    return true;
 }
 
 void

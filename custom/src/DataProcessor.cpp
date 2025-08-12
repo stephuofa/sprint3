@@ -256,7 +256,7 @@ bool DataProcessor::loadConstants(
 
 bool DataProcessor::loadEnergyCalib(const std::string& calibFolderPath)
 {
-    //! @todo if we fail, use reasonable values
+    calibLoaded = false;
     std::vector<double> a,b,c,t;
     if (!loadConstants(a, calibFolderPath + "/a.txt",CHIP_AREA)){return false;}
     if (!loadConstants(b, calibFolderPath + "/b.txt",CHIP_AREA)){return false;}

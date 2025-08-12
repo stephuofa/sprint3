@@ -94,11 +94,12 @@ class AcqController final{
          * @brief configures the harpix
          * 
          * @param[in] acqTimeSec desired acquitision time in seconds
+         * @return true if successful, else false
          * 
          * @note Hardcoded config values for a given hardpix device exist in this function.
          * If using a different device, you must modify these values.
          */
-        void loadConfig(const size_t acqTimeSec);
+        bool loadConfig(const size_t acqTimeSec);
 
         /**
          * @fn connectDevice()

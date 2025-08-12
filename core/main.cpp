@@ -140,10 +140,10 @@ int loop(size_t acqTime){
     DataProcessor dataProc(rawHitsBuff, speciesHitsQ, logger);
 
     printf("\nLoading energy calibration files...\n");
-    if (!dataProc.loadEnergyCalib(PATH_TO_CALIB)){return EXIT_FAILURE;}
+    if(!dataProc.loadEnergyCalib(PATH_TO_CALIB)){return true;} // escape loop
 
     printf("\nLoading energy configuration files...\n");
-    acqCtrl.loadConfig(acqTime);
+    if(!acqCtrl.loadConfig(acqTime)){return true;}; // escape loop
 
     printf("\nConecting to hardpix...\n");
     int16_t seconds = POWER_CYCLE_SECONDS_MIN;

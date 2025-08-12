@@ -123,7 +123,8 @@ class DataProcessor final{
          * 
          * @param[in] px raw hit (pixel) to get energy for
          * 
-         * @return the energy of the hit in keV
+         * @return the energy of the hit in keV;
+         * if no energy calibration is loaded before hand, returns time over threshold
          * 
          * @note loadEnergyCalib must be called before calling getEnergy!
          */
