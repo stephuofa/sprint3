@@ -70,4 +70,14 @@ class Logger final{
          * @note mutex protected
          */
         void log(const LogLevel level, const std::string& msg);
+
+        /**
+         * @fn void logException(const LogLevel level, const std::exception& e)
+         * @brief logs an exception using a custom message and exception type and info 
+         */
+        void logException(
+            const LogLevel level,
+            const std::string& msg,
+            const std::exception& e
+        );
 };

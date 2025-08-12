@@ -183,11 +183,10 @@ void DataProcessor::processingLoop(std::stop_token stopToken){
         delete[] workBuf;
     }
     catch(const std::exception & e) {
-        //! @todo - should we relaunch thread/program on fatal error
-        logger->log(
+        logger->logException(
             LogLevel::LL_FATAL,
-            std::format("caught exception in DataProcessor-thread: type-[{}] msg-[{}]",
-                typeid(e).name(),e.what())
+            std::format("caught exception in DataProcessor-thread"),
+            e
         );
     }
 }

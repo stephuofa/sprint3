@@ -169,10 +169,11 @@ int loop(size_t acqTime){
         acqCtrl.runAcq();
     } catch (std::runtime_error &e){
         goodAcq = false;
-        logger->log(
+        logger->logException(
             LogLevel::LL_ERROR,
-            std::format("error during acquisition: type-[{}] msg-[{}], restarting",
-                typeid(e).name(),e.what()));
+            "error during acquisition, restarting",
+            e
+        );
         logger->log(LogLevel::LL_INFO,"power cycling hardpix");
         powerCycle(POWER_CYCLE_SECONDS_MIN);
     }
@@ -209,7 +210,7 @@ int main (int argc, char* argv[]){
 
     createReqPaths();
 
-    // todo - once we have a RTC, we can retrigger acqs based on remaining time
+    // todo - potential improvement: once we have a RTC,retrigger acqs based on time left
     while(!loop(acqTime));
     return EXIT_SUCCESS;
 }

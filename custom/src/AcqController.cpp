@@ -141,10 +141,10 @@ bool AcqController::loadConfig(const size_t acqTimeSec){
         katherine::px_config px_config = katherine::load_bmc_file(PATH_TO_CHIP_CONFIG);
         config.set_pixel_config(std::move(px_config));
     } catch(const std::exception &e){
-        logger->log(
+        logger->logException(
             LogLevel::LL_FATAL,
-            std::format("pixel configuration failed: type-[{}] msg-[{}]",
-                typeid(e).name(),e.what())
+            "pixel configuration failed",
+            e
         );
         return false;
     }

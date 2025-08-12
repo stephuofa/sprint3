@@ -131,11 +131,10 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
         logger->log(LogLevel::LL_INFO,"StorageManager speciesThread terminated");
     }
     catch(const std::exception & e){
-        //! @todo - should we relaunch thread/program on fatal error
-        logger->log(
+        logger->logException(
             LogLevel::LL_FATAL,
-            std::format("caught exception in StorageManager-speciesThread:\
-type-[{}] msg-[{}]",typeid(e).name(),e.what())
+            "caught exception in StorageManager-speciesThread",
+            e
         );
     }
 
@@ -163,7 +162,6 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
                 fileNo,
                 MAX_RAW_FILE_LINES)
             ){
-                //! @todo what action should we take if we can't open files 
                 logger->log(LogLevel::LL_INFO,"StorageManager rawThread cant open outfile");
                 return;
             }
@@ -218,10 +216,10 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
     catch(const std::exception & e)
     {
         //! @todo - should we relaunch thread/program on fatal error
-        logger->log(
+        logger->logException(
             LogLevel::LL_FATAL,
-            std::format("caught exception in StorageManager-rawThread:type-[{}] msg-[{}]",
-                typeid(e).name(),e.what())
+            "caught exception in StorageManager-rawThread",
+            e
         );
     }
 }

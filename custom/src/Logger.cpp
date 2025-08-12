@@ -1,5 +1,6 @@
 #include "Logger.hpp"
 #include <stdexcept>
+#include <format>
 
 #include <time.h>
 
@@ -14,8 +15,25 @@ Logger::Logger(const std::string& filename):logFile_(std::ofstream(filename)){
 
 void Logger::log(LogLevel level, const std::string& msg){
     std::unique_lock lk(mtx_);
-    logFile_ << time(NULL) << " " << getLogLevelMsg(level) <<
-         " \"" << msg << "\"" << std::endl;
+    std::string entry = std::format("{} {} \"{}\"",
+        time(NULL),
+        getLogLevelMsg(level),
+        msg
+    );
+    logFile_ << entry << std::endl;
+    logFile_.flush();
+}
+
+void Logger::logException(const LogLevel level, const std::string& msg, const std::exception& e){
+    std::unique_lock lk(mtx_);
+    std::string entry = std::format("{} {} \"{}: type-[{}] what-[{}]\"",
+        time(NULL),
+        getLogLevelMsg(level),
+        msg,
+        typeid(e).name(),
+        e.what()
+    );
+    logFile_ << entry << std::endl;
     logFile_.flush();
 }
 
