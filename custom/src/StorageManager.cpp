@@ -95,6 +95,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
                     return stopToken.stop_requested() || speciesHitsQ->q_.size() > 0;});
                 }
             
+                count += speciesHitsQ->q_.size();
                 while(!speciesHitsQ->q_.empty()){
                     const auto curEl = speciesHitsQ->q_.front();
                     outFile << (int) curEl.grade_ << " " << curEl.startTOA_ << 
