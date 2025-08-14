@@ -86,7 +86,7 @@ constexpr size_t RAW_HIT_NOTIF_INC = 1000;
 constexpr size_t MAX_BUFF_EL = 65536;
 
 // File Size (Soft) Limitations 
-constexpr size_t MAX_RAW_FILE_LINES = 33554432; // ~5GB
-constexpr size_t MAX_SPECIES_FILE_LINES = 33554432; // ~5GB
+constexpr size_t MAX_RAW_FILE_LINES = 203272823; // ~5GB
+constexpr size_t MAX_SPECIES_FILE_LINES = 147058823; // ~5GB
 
 // -------- / Buffering Settings \ ------------------------------------------------------
