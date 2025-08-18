@@ -12,7 +12,7 @@ with slight modifications allowing for static linking and timeout on absence of 
 <br>
 ## Documentation
 To build and read the docs, from the top level directory (sprint3), run:<br>
-`doxygen .\Doxyfile`
+`doxygen Doxyfile`
 
 Then open `docs/html/index.html` with your browser of choice.
 
@@ -71,7 +71,7 @@ Sporatically, a small number of UDP data packets from the HardPix to the PC are 
 
 Monitoring the connection with Wireshark indicates that the UDP packets are being received by the PC.
 
-Example output from the minimal executable:<br>
+Example output from the minimal executable (minimalEx.cpp):<br>
 ![alt text](./img/udp_drop.png)
 
 To build and run the minimal executable:

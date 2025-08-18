@@ -80,7 +80,7 @@ class AcqController final{
          * 
          * @param rhq buffer of raw hits to write into, buffer gets sent for processing
          * @param rh2w buffer of raw hits to write into, buffer get sent for storing
-         * @param log logger instance to be used to log info/warnings
+         * @param logger logger instance to be used to log info/warnings
          */
         AcqController(
             std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,

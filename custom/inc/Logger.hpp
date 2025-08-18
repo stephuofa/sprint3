@@ -73,7 +73,11 @@ class Logger final{
 
         /**
          * @fn void logException(const LogLevel level, const std::exception& e)
-         * @brief logs an exception using a custom message and exception type and info 
+         * @brief logs an exception using a custom message and exception type and info
+         * 
+         * @param[in] level log level enum for this log entry
+         * @param[in] msg for log entrys
+         * @param[in] e exception to print info on for this log entry
          */
         void logException(
             const LogLevel level,

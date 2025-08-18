@@ -57,6 +57,7 @@ constexpr uint32_t CHIP_AREA = CHIP_WIDTH * CHIP_HEIGHT;
 
 //! @brief number of times to attempt to connect before power-cycling
 constexpr size_t CNXT_ATTEMPTS = 5;
+//! @brief seconds to wait between (non-powercycling) connection attempts
 constexpr size_t SEC_BTW_CNXT_ATTEMPTS = 3;
 
 // --------- / Hardpix Settings \ -------------------------------------------------------
@@ -91,7 +92,9 @@ constexpr size_t RAW_HIT_NOTIF_INC = 1000;
 constexpr size_t MAX_BUFF_EL = 65536;
 
 // File Size (Soft) Limitations 
-constexpr size_t MAX_RAW_FILE_LINES = 203272823; // ~5GB
-constexpr size_t MAX_SPECIES_FILE_LINES = 147058823; // ~5GB
+//!@brief soft limit on max number of file lines for raw hit data (~5GB)
+constexpr size_t MAX_RAW_FILE_LINES = 203272823;
+//!@brief soft limit on max number of file lines for species hit data (~5GB)
+constexpr size_t MAX_SPECIES_FILE_LINES = 147058823;
 
 // -------- / Buffering Settings \ ------------------------------------------------------

@@ -1,3 +1,8 @@
+/**
+ * @file minimalEx.cpp
+ * @brief minimal working example to showcase basic functionality and UDP packet drop bug
+ */
+
 #include <iostream>
 #include <katherinexx/katherinexx.hpp>
 #include <fstream>

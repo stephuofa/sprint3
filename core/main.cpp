@@ -39,7 +39,6 @@ void checkCreateDir(std::string& string){
 /**
  * @fn void createReqPaths()
  * @brief creates required paths for output directories
- * @return none
  */
 void createReqPaths(){
     std::vector<std::string> dirs = 

@@ -15,11 +15,23 @@
  * @brief a structure holding species hit data
  */
 struct SpeciesHit {
-    uint8_t grade_;
-    uint64_t startTOA_;
+    //! cluster grade acording to Chandra x-ray ACIS grading system
+    uint8_t grade_; 
+    //! time of arrival of first hit in cluster (ticks since beggining of acquisition)
+    uint64_t startTOA_; 
+    //! time of arrival of last hit in cluster (ticks since beggining of acquisition)
     uint64_t endTOA_;
-    double totalE_;
+    //! total energy of all hits in cluster (keV)
+    double totalE_; 
 
+ /**
+  * @fn inline SpeciesHit() (uint8_t g, uint64_t toaStart, uint64_t toaEnd, double e)
+  * @brief constructor for SpeciesHit struct
+  * @param[in] g grade of species hit
+  * @param[in] toaStart starting time of arival (toa of first raw hit in cluster)
+  * @param[in] toaEnd ending time of arival (toa of last raw hit in cluster)
+  * @param[in] e total energy of cluster
+  */
    inline SpeciesHit(uint8_t g, uint64_t toaStart, uint64_t toaEnd, double e):
    grade_(g),startTOA_(toaStart),endTOA_(toaEnd),totalE_(e){};
 };
@@ -159,7 +171,7 @@ template <typename T> class SafeBuff : public ResourceGuard{
 };
 
 /**
- * @fn inline void safe_finish(std::jthread& t, std::shared_ptr<SafeSomething> ss)
+ * @fn inline void safe_finish(std::jthread& t, std::shared_ptr<ResourceGuard> guard)
  * @brief gracefully join thread that waits on a mutex and condition
  * variable protected resource
  * 
