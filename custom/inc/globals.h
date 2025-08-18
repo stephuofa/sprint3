@@ -1,3 +1,8 @@
+/**
+ * @file globals.h
+ * @brief globally accessible settings
+ */
+
 #pragma once
 #include <katherinexx/acquisition.hpp>
 #include <string>

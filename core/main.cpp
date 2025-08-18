@@ -18,7 +18,12 @@
 #include <filesystem>
 #include <format>
 
-
+/**
+ * @fn void checkCreateDir(std::string& string)
+ * @brief checks if a given directory exists, if not, creates it 
+ * 
+ * @param[in] string string containing directory path
+ */
 void checkCreateDir(std::string& string){
     try {
         if(!std::filesystem::is_directory(std::filesystem::path(string))){
@@ -31,6 +36,11 @@ void checkCreateDir(std::string& string){
 
 }
 
+/**
+ * @fn void createReqPaths()
+ * @brief creates required paths for output directories
+ * @return none
+ */
 void createReqPaths(){
     std::vector<std::string> dirs = 
     {
@@ -46,6 +56,15 @@ void createReqPaths(){
     }
 }
 
+/**
+ * @fn int getRunNum()
+ * @brief gets the run number of the program
+ * 
+ * if no run number file exists, searches output directories to determine value 
+ * (defualting to 1), and creates file
+ * 
+ * @return integer representing run number
+ */
 int getRunNum(){
     auto runNumFile = std::ifstream(PATH_TO_RUN_NUM_FILE); 
     if(!runNumFile.is_open()){
@@ -63,6 +82,11 @@ int getRunNum(){
     }
 }
 
+/**
+ * @fn std::string parseForRunNum()
+ * @brief searches through output directory to determine run number
+ * @return string representing current run number (e.g. "1")
+ */
 std::string parseForRunNum()
 {
     int maxNum = 0;
@@ -90,6 +114,12 @@ std::string parseForRunNum()
     return std::to_string(maxNum + 1);
 }
 
+/**
+ * @fn std::string updateRunNum(int runInt)
+ * @brief gets the current run number as a string, and increments the run number file
+ * 
+ * @return current run number as string (e.g. "5")
+ */
 std::string updateRunNum(int runInt)
 {
     std::string runNum;
@@ -106,6 +136,14 @@ std::string updateRunNum(int runInt)
     return runNum;
 }
 
+/**
+ * @fn powerCycle(uint16_t seconds)
+ * @brief power cycles the hardpix for given amount of seconds
+ * 
+ * call a script to achieves powercycling - does not return until script completes
+ * 
+ * @return result of system call for calling the script
+ */
 int powerCycle(uint16_t seconds){
     char command[128];
     snprintf(
@@ -119,6 +157,11 @@ int powerCycle(uint16_t seconds){
     return system(command);
 }
 
+/**
+ * @fn int loop(size_t acqTime)
+ * @brief superloop that gets re-run incase of failure to receive data from the hardpix
+ * @return 1 if successful, 0 if unsuccessful
+ */
 int loop(size_t acqTime){
 
     // get run number and increment it
@@ -187,7 +230,13 @@ int loop(size_t acqTime){
 }
 
 bool debugPrints = false;
-int main (int argc, char* argv[]){
+
+/**
+ * @fn int main(int argc, char* argv[])
+ * @brief entry point
+ * @return exit code
+ */
+int main(int argc, char* argv[]){
     size_t acqTime;
     try
     {

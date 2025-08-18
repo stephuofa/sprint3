@@ -1,5 +1,5 @@
 /**
- * @file StorageManager
+ * @file StorageManager.hpp
  * @brief responsible for writing data to file
  */
 

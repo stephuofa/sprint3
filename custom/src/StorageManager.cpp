@@ -216,7 +216,6 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
     }
     catch(const std::exception & e)
     {
-        //! @todo - should we relaunch thread/program on fatal error
         logger->logException(
             LogLevel::LL_FATAL,
             "caught exception in StorageManager-rawThread",

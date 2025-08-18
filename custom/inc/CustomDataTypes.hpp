@@ -25,9 +25,8 @@ struct SpeciesHit {
 };
 
 /**
- * @class Resource Guard
- * @brief a structure to protect and synchronize shared resources using a
- * condition variable and mutex
+ * @class ResourceGuard
+ * @brief used to protect and synchronize shared resources
  */
 class ResourceGuard {
     public:
@@ -48,7 +47,7 @@ template <typename T> class SafeQueue : public ResourceGuard{
 /**
  * @class SafeBuff
  * @brief templated class providing a mutex protected and
- * condition_variable synchronized raw array
+ * condition_variable synchronized c-style array
  */
 template <typename T> class SafeBuff : public ResourceGuard{
     public:

@@ -12,7 +12,13 @@
 
 /**
  * @class DataProcessor
- * recieves raw hit data, converts it to processed hit data, sends to StorageManager
+ * @brief converts raw (individual) hit into species (burst/cluster) hits
+ * 
+ * The DataProcessor has a thread responsible for converting raw, individual hits into
+ * processed hit data by clustering in time and applying species detection algorithms.
+ * 
+ * The DataProcessor receives raw hits from the acquisition, processes them, and sends
+ * information on processed data to be stored.
  */
 class DataProcessor final{
     private:
@@ -69,7 +75,7 @@ class DataProcessor final{
          * @fn DataProcessor(std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
          * std::shared_ptr<SafeQueue<SpeciesHit>> shq, std::shared_ptr<Logger> log)
          * @brief constructor for DataProcessor,
-         * launch must be called to start processing thread
+         * launch() must be called to start processing thread
          * 
          * @param rhq raw hits queue to read from
          * @param shq species hits queue to write to
@@ -111,9 +117,9 @@ class DataProcessor final{
          * @param[in] workBuf buffer containing raw hits to process
          * @param[in] workBufElements number of raw hits in workBuf
          * 
-         * @note loadEnergyCalib must be called before calling
-         * 
-         * @note returns void, but pushes to species hit buffer
+         * @note
+         * - loadEnergyCalib must be called before calling
+         * - returns void, but pushes to species hit buffer
          */
         void doProcessing(mode::pixel_type* workBuf, size_t workBufElements);
 

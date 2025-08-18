@@ -13,12 +13,11 @@
 
 /**
  * @class AcqController
- * @brief Class for configuring and controlling HardPix acuisitions,
- * writting received data into buffers
+ * @brief Class for configuring and controlling HardPix acuisitions.
  * 
- * @note possible improvements:<br>
- * - register data received callbacks to write to queues instead of hardcoded
- * bindings in constructor
+ * @todo possible improvements:<br>
+ * - register "dataReceived" callback functions to write to queues
+ * (instead of having hardcoded queues in the class)
  */
 class AcqController final{
     private:
@@ -80,8 +79,8 @@ class AcqController final{
          * @brief constructor for acq controller
          * 
          * @param rhq buffer of raw hits to write into, buffer gets sent for processing
-         * @param rhw2 buffer of raw hits to write into, buffer get sent for storing
-         * @param log logger 
+         * @param rh2w buffer of raw hits to write into, buffer get sent for storing
+         * @param log logger instance to be used to log info/warnings
          */
         AcqController(
             std::shared_ptr<SafeBuff<mode::pixel_type>> rhq,
@@ -91,13 +90,18 @@ class AcqController final{
         
         /**
          * @fn loadConfig(size_t acqTimeSec);
-         * @brief configures the harpix
+         * @brief prepares the configuration to be sent to the hardpix on runAcq()
          * 
          * @param[in] acqTimeSec desired acquitision time in seconds
-         * @return true if successful, else false
+         * @return true if successful in preparing the configuration, else false
          * 
-         * @note Hardcoded config values for a given hardpix device exist in this function.
+         * @note 
+         * - Hardcoded config values for the hardpix device exist in this function.
          * If using a different device, you must modify these values.
+         * - This functions loads pixel configuration from a file
+         * @todo
+         * - potential improvements: remove hard coded config values
+         * (extract as seperate class/struct)
          */
         bool loadConfig(const size_t acqTimeSec);
 
