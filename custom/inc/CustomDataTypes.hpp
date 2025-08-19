@@ -15,7 +15,7 @@
  * @brief a structure holding species hit data
  */
 struct SpeciesHit {
-    //! cluster grade acording to Chandra x-ray ACIS grading system
+    //! cluster grade acording to the ASCA grading system, based on Chandra x-ray ACIS grading system
     uint8_t grade_; 
     //! time of arrival of first hit in cluster (ticks since beggining of acquisition)
     uint64_t startTOA_; 
