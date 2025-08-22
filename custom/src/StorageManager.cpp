@@ -169,6 +169,11 @@ void StorageManager::handleRawHits(std::stop_token stopToken){
             
             {
                 std::unique_lock lk(rawHitsToWriteBuff->mtx_);
+                if(!stopToken.stop_requested())
+                {
+                    rawHitsToWriteBuff->cv_.wait(lk, [&]{
+                    return stopToken.stop_requested() || (rawHitsToWriteBuff->numElements_ > 0);});
+                }
                 workBufElements = rawHitsToWriteBuff->copyClear(workBuf,MAX_BUFF_EL);
             }
             for(size_t i = 0; i < workBufElements; i++)
