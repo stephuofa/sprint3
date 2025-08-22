@@ -129,7 +129,7 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
 
                 // perform analysis on this cluster and send its data to be saved
                 uint8_t grd = getClusterGrade(clustStartInd,i-1,maxEInd,workBuf);
-                speciesHitsQ->q_.emplace(grd,clustTOAStart,clustTOAMax-5,totEnergy);
+                speciesHitsQ->q_.emplace(grd,clustTOAStart,totEnergy);
 
                 // reset cluster stats
                 clustStartInd = i;
@@ -143,7 +143,7 @@ void DataProcessor::doProcessing(mode::pixel_type* workBuf, size_t workBufElemen
 
         // after exiting the loop we need to deal process the final cluster
         uint8_t grd = getClusterGrade(clustStartInd,workBufElements-1,maxEInd,workBuf);
-        speciesHitsQ->q_.emplace(grd,clustTOAStart,clustTOAMax-5,totEnergy);
+        speciesHitsQ->q_.emplace(grd,clustTOAStart,totEnergy);
 
     }
     speciesHitsQ->cv_.notify_one();

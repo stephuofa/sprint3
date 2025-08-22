@@ -19,8 +19,6 @@ struct SpeciesHit {
     uint8_t grade_; 
     //! time of arrival of first hit in cluster (ticks since beggining of acquisition)
     uint64_t startTOA_; 
-    //! time of arrival of last hit in cluster (ticks since beggining of acquisition)
-    uint64_t endTOA_;
     //! total energy of all hits in cluster (keV)
     double totalE_; 
 
@@ -32,8 +30,8 @@ struct SpeciesHit {
   * @param[in] toaEnd ending time of arival (toa of last raw hit in cluster)
   * @param[in] e total energy of cluster
   */
-   inline SpeciesHit(uint8_t g, uint64_t toaStart, uint64_t toaEnd, double e):
-   grade_(g),startTOA_(toaStart),endTOA_(toaEnd),totalE_(e){};
+   inline SpeciesHit(uint8_t g, uint64_t toaStart, double e):
+   grade_(g),startTOA_(toaStart),totalE_(e){};
 };
 
 /**

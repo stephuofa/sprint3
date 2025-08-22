@@ -99,7 +99,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
                 while(!speciesHitsQ->q_.empty()){
                     const auto curEl = speciesHitsQ->q_.front();
                     outFile << (int) curEl.grade_ << " " << curEl.startTOA_ << 
-                        " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
+                    " " << curEl.totalE_  << std::endl;
                     speciesHitsQ->q_.pop();
                 }
             }
@@ -122,7 +122,7 @@ void StorageManager::handleSpeciesHits(std::stop_token stopToken){
             {
                 const auto curEl = speciesHitsQ->q_.front();
                 outFile << curEl.grade_ << " " << curEl.startTOA_ <<
-                    " " << curEl.endTOA_ << " " << curEl.totalE_  << std::endl;
+                " " << curEl.totalE_  << std::endl;
                 speciesHitsQ->q_.pop();
             }
         }
@@ -321,8 +321,8 @@ void StorageManager::genHeader(
 
     header << "#" << std::endl;
     header << "# raw format: x(int) y(int) toa(tics) tot(tics)" << std::endl;
-    header << "# species format: grade(int) cluster_start_toa(tics) cluster_end_toa(tics) cluster_energy(keV)" << std::endl;
-    header << "# NOTE: tics are since begining of acquisition; the length of a tic depends on freq" << std::endl;
+    header << "# species format: grade(int) cluster_start_toa(tics) cluster_energy(keV)" << std::endl;
+    header << "# NOTE: tics are since begining of acquisition; 1 tic = 1/Clk_Freq" << std::endl;
     header << "#----------------------------------------------------------------------------------------" << std::endl;
 }
 
