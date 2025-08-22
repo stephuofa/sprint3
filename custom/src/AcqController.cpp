@@ -200,7 +200,7 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
         logger->log(
             LogLevel::LL_WARNING,
             std::format("buffer overflow in AcqController::pixels_received \
-- forced to discard %zu elements from rawHitsBuff",discarded)
+- forced to discard {} elements from rawHitsBuff", discarded)
         );
     }
 
@@ -217,7 +217,7 @@ AcqController::pixels_received(const mode::pixel_type *px, size_t count)
         logger->log(
             LogLevel::LL_WARNING,
             std::format("buffer overflow in AcqController::pixels_received \
-- forced to discard %zu elements from rawHitsToWriteBuff",discarded)
+- forced to discard {} elements from rawHitsToWriteBuff", discarded)
         );
     }
 }
