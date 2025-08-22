@@ -105,9 +105,9 @@ int main()
         acq.set_frame_ended_handler(frame_ended);
         acq.set_pixels_received_handler(pixels_received);
         acq.begin(config, katherine::readout_type::data_driven);
-        auto tic = steady_clock::now();
+        auto tic = system_clock::now();
         acq.read();
-        auto toc = steady_clock::now();
+        auto toc = system_clock::now();
         double duration = duration_cast<milliseconds>(toc - tic).count() / 1000.;
         std::cerr << std::endl;
         std::cerr << "Acquisition completed:" << std::endl
