@@ -76,7 +76,7 @@ constexpr uint16_t POWER_CYCLE_SECONDS_MIN = 10;
 constexpr uint16_t POWER_CYCLE_SECONDS_MAX = 160;
 
 //! @brief amount of milliseconds without hit that should cause a powercycle and restart
-constexpr uint32_t HIT_TIMEOUT = 60*1000;
+constexpr uint32_t HIT_TIMEOUT = 2*60*1000; // 2 minutes
 
 // -------- / Power Cycle Settings \ ----------------------------------------------------
 
